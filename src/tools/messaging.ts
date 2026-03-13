@@ -3,6 +3,11 @@ import * as z from 'zod/v4';
 import type { LineService } from '../services/line.js';
 import { formatLineError } from '../utils/error.js';
 
+const targetId = z
+  .string()
+  .regex(/^[UCR]/, 'Target ID must start with "U", "C", or "R"')
+  .describe('Target ID — User ID (U…), Group ID (C…), or Room ID (R…)');
+
 export function registerMessagingTools(
   server: McpServer,
   lineService: LineService,
@@ -15,10 +20,8 @@ export function registerMessagingTools(
         'Send a text message to a LINE user, group, or room. ' +
         'Target ID prefixes: User="U", Group="C", Room="R".',
       inputSchema: z.object({
-        to: z
-          .string()
-          .describe('Target ID — User ID (U…), Group ID (C…), or Room ID (R…)'),
-        text: z.string().describe('Message text to send'),
+        to: targetId,
+        text: z.string().min(1).max(5000).describe('Message text to send'),
       }),
     },
     async ({ to, text }) => {
@@ -42,7 +45,7 @@ export function registerMessagingTools(
       title: 'Push Image Message',
       description: 'Send an image to a LINE user, group, or room.',
       inputSchema: z.object({
-        to: z.string().describe('Target ID'),
+        to: targetId,
         originalContentUrl: z
           .string()
           .url()
@@ -85,9 +88,9 @@ export function registerMessagingTools(
       description:
         'Send a LINE sticker. See LINE sticker list for valid packageId/stickerId.',
       inputSchema: z.object({
-        to: z.string().describe('Target ID'),
-        packageId: z.string().describe('Sticker package ID'),
-        stickerId: z.string().describe('Sticker ID'),
+        to: targetId,
+        packageId: z.string().min(1).describe('Sticker package ID'),
+        stickerId: z.string().min(1).describe('Sticker ID'),
       }),
     },
     async ({ to, packageId, stickerId }) => {
@@ -118,35 +121,51 @@ export function registerMessagingTools(
         'Send a Flex Message (rich layout) to a LINE user, group, or room. ' +
         'Pass the Flex container as a JSON string.',
       inputSchema: z.object({
-        to: z.string().describe('Target ID'),
+        to: targetId,
         altText: z
           .string()
-          .describe('Alternative text shown in push notifications'),
+          .min(1)
+          .max(400)
+          .describe('Alternative text shown in push notifications (max 400 chars)'),
         contents: z
           .string()
+          .min(1)
           .describe('Flex Message container JSON string (bubble or carousel)'),
       }),
     },
     async ({ to, altText, contents }) => {
+      let parsed: unknown;
       try {
-        const parsed = JSON.parse(contents);
-        if (
-          typeof parsed !== 'object' ||
-          parsed === null ||
-          Array.isArray(parsed) ||
-          (parsed.type !== 'bubble' && parsed.type !== 'carousel')
-        ) {
-          return {
-            content: [
-              {
-                type: 'text',
-                text: 'Invalid Flex container: must be a JSON object with "type" set to "bubble" or "carousel"',
-              },
-            ],
-            isError: true,
-          };
-        }
-        await lineService.pushFlexMessage(to, altText, parsed);
+        parsed = JSON.parse(contents);
+      } catch {
+        return {
+          content: [
+            { type: 'text', text: 'Invalid Flex container: contents is not valid JSON' },
+          ],
+          isError: true,
+        };
+      }
+
+      if (
+        typeof parsed !== 'object' ||
+        parsed === null ||
+        Array.isArray(parsed) ||
+        ((parsed as Record<string, unknown>).type !== 'bubble' &&
+          (parsed as Record<string, unknown>).type !== 'carousel')
+      ) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: 'Invalid Flex container: must be a JSON object with "type" set to "bubble" or "carousel"',
+            },
+          ],
+          isError: true,
+        };
+      }
+
+      try {
+        await lineService.pushFlexMessage(to, altText, parsed as any);
         return {
           content: [{ type: 'text', text: `Flex message sent to ${to}` }],
         };
@@ -168,7 +187,7 @@ export function registerMessagingTools(
       description:
         'Broadcast a text message to ALL followers of the LINE Official Account. Use with caution.',
       inputSchema: z.object({
-        text: z.string().describe('Message text to broadcast'),
+        text: z.string().min(1).max(5000).describe('Message text to broadcast'),
       }),
     },
     async ({ text }) => {
@@ -196,11 +215,11 @@ export function registerMessagingTools(
         'Send a text message to multiple LINE users at once (max 500 user IDs).',
       inputSchema: z.object({
         userIds: z
-          .array(z.string())
+          .array(z.string().min(1))
           .min(1)
           .max(500)
           .describe('Array of User IDs to send to (1–500)'),
-        text: z.string().describe('Message text to send'),
+        text: z.string().min(1).max(5000).describe('Message text to send'),
       }),
     },
     async ({ userIds, text }) => {

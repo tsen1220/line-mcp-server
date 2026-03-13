@@ -14,7 +14,7 @@ export function registerProfileTools(
       description:
         "Get a LINE user's display name, picture URL, status message, and language.",
       inputSchema: z.object({
-        userId: z.string().describe('LINE User ID (starts with "U")'),
+        userId: z.string().min(1).describe('LINE User ID (starts with "U")'),
       }),
     },
     async ({ userId }) => {
@@ -41,7 +41,7 @@ export function registerProfileTools(
       description:
         "Get a LINE group's name and picture URL. The bot must be a member of the group.",
       inputSchema: z.object({
-        groupId: z.string().describe('LINE Group ID (starts with "C")'),
+        groupId: z.string().min(1).describe('LINE Group ID (starts with "C")'),
       }),
     },
     async ({ groupId }) => {

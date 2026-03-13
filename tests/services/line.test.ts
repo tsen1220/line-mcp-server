@@ -112,6 +112,26 @@ describe('LineMessagingClient', () => {
       });
       expect(mockGetProfile).toHaveBeenCalledWith('U123');
     });
+
+    it('handles profile with only required fields', async () => {
+      mockGetProfile.mockResolvedValue({
+        displayName: 'Min',
+        userId: 'U456',
+      });
+      const profile = await service.getUserProfile('U456');
+      expect(profile).toEqual({
+        displayName: 'Min',
+        userId: 'U456',
+        pictureUrl: undefined,
+        statusMessage: undefined,
+        language: undefined,
+      });
+    });
+
+    it('propagates SDK errors', async () => {
+      mockGetProfile.mockRejectedValue(new Error('SDK failure'));
+      await expect(service.getUserProfile('U123')).rejects.toThrow('SDK failure');
+    });
   });
 
   describe('getGroupSummary', () => {
@@ -128,6 +148,31 @@ describe('LineMessagingClient', () => {
         pictureUrl: 'https://pic.com/group.jpg',
       });
       expect(mockGetGroupSummary).toHaveBeenCalledWith('C456');
+    });
+
+    it('handles group without pictureUrl', async () => {
+      mockGetGroupSummary.mockResolvedValue({
+        groupId: 'C789',
+        groupName: 'No Pic Group',
+      });
+      const summary = await service.getGroupSummary('C789');
+      expect(summary).toEqual({
+        groupId: 'C789',
+        groupName: 'No Pic Group',
+        pictureUrl: undefined,
+      });
+    });
+
+    it('propagates SDK errors', async () => {
+      mockGetGroupSummary.mockRejectedValue(new Error('forbidden'));
+      await expect(service.getGroupSummary('C456')).rejects.toThrow('forbidden');
+    });
+  });
+
+  describe('pushTextMessage', () => {
+    it('propagates SDK errors', async () => {
+      mockPushMessage.mockRejectedValue(new Error('push failed'));
+      await expect(service.pushTextMessage('U123', 'Hi')).rejects.toThrow('push failed');
     });
   });
 
