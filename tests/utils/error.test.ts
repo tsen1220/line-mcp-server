@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { formatLineError } from '../../src/utils/error.js';
 
 describe('formatLineError', () => {
-  it('returns "Unexpected error" for a regular Error without statusCode', () => {
+  it('returns message for a regular Error without statusCode', () => {
     const error = new Error('something broke');
-    expect(formatLineError(error)).toBe('Unexpected error');
+    expect(formatLineError(error)).toBe('something broke');
   });
 
   it('returns HTTP status for a LINE API error with statusCode', () => {
@@ -26,6 +26,6 @@ describe('formatLineError', () => {
 
   it('ignores statusCode if it is not a number', () => {
     const error = Object.assign(new Error('bad'), { statusCode: 'not a number' });
-    expect(formatLineError(error)).toBe('Unexpected error');
+    expect(formatLineError(error)).toBe('bad');
   });
 });

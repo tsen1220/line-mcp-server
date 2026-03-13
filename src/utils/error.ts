@@ -13,5 +13,5 @@ export function formatLineError(error: unknown): string {
     return `LINE API error (HTTP ${statusCode})`;
   }
 
-  return 'Unexpected error';
+  return error.message;
 }
