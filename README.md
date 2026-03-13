@@ -90,8 +90,6 @@ Add the MCP server to your OpenClaw config (`openclaw.json` or `~/.openclaw/mcp.
 }
 ```
 
-Once registered, your OpenClaw agent can send LINE messages through any connected channel (WhatsApp, Telegram, Slack, etc.).
-
 ## Target ID Prefixes
 
 | Prefix | Type |
