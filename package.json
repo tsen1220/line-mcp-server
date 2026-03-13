@@ -1,0 +1,31 @@
+{
+  "name": "line-mcp-tools",
+  "version": "1.0.0",
+  "description": "MCP server for LINE Messaging API — send messages to users, groups, and rooms",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "line-mcp-tools": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@line/bot-sdk": "^10.0.0",
+    "@modelcontextprotocol/sdk": "^1.27.0",
+    "zod": "~3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@vitest/coverage-v8": "^4.1.0",
+    "typescript": "^5.8.0",
+    "vitest": "^4.1.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
