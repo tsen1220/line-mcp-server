@@ -50,6 +50,29 @@ npm install
 npm run build
 ```
 
+## Register in OpenClaw with mcporter
+
+```bash
+mcporter config add line-mcp-tools \
+  --command node \
+  --arg /path/to/line-mcp-tools/dist/index.js \
+  --env CHANNEL_ACCESS_TOKEN=<your-token> \
+  --description "LINE Messaging API tools"
+```
+
+Verify registration:
+
+```bash
+mcporter list line-mcp-tools --schema
+```
+
+Call tools directly:
+
+```bash
+mcporter call line-mcp-tools.push_text_message to=U... text="Hello"
+mcporter call line-mcp-tools.get_user_profile userId=U...
+```
+
 ## Register in Claude Code
 
 ```bash
@@ -61,34 +84,6 @@ claude mcp add line-mcp-tools -t stdio \
 After registration, Claude can call LINE tools directly:
 
 > "Send 'Hello' to my LINE group C1234567890"
-
-## Register in OpenClaw
-
-Add the MCP server to your OpenClaw config (`openclaw.json` or `~/.openclaw/mcp.json`):
-
-```json
-{
-  "agents": {
-    "list": [
-      {
-        "id": "main",
-        "mcp": {
-          "servers": [
-            {
-              "name": "line-mcp-tools",
-              "command": "node",
-              "args": ["/path/to/line-mcp-tools/dist/index.js"],
-              "env": {
-                "CHANNEL_ACCESS_TOKEN": "<your-token>"
-              }
-            }
-          ]
-        }
-      }
-    ]
-  }
-}
-```
 
 ## Target ID Prefixes
 
