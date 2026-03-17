@@ -1,4 +1,4 @@
-import { messagingApi } from '@line/bot-sdk';
+import { messagingApi, insight } from '@line/bot-sdk';
 
 /**
  * LINE user profile returned by the Messaging API.
@@ -30,6 +30,44 @@ export interface FlexContainer {
 }
 
 /**
+ * Bot information returned by the Messaging API.
+ */
+export interface BotInfo {
+  userId: string;
+  basicId: string;
+  premiumId?: string;
+  displayName: string;
+  pictureUrl?: string;
+  chatMode: string;
+  markAsReadMode: string;
+}
+
+/**
+ * Message quota information.
+ */
+export interface MessageQuota {
+  type: string;
+  value?: number;
+}
+
+/**
+ * Message quota consumption for the current month.
+ */
+export interface MessageQuotaConsumption {
+  totalUsage: number;
+}
+
+/**
+ * Insight data on the number of followers.
+ */
+export interface InsightFollowers {
+  status: string;
+  followers?: number;
+  targetedReaches?: number;
+  blocks?: number;
+}
+
+/**
  * Service interface for all LINE Messaging API operations.
  *
  * The `to` parameter in push methods accepts:
@@ -58,13 +96,21 @@ export interface LineService {
   multicastTextMessage(userIds: string[], text: string): Promise<void>;
   getUserProfile(userId: string): Promise<UserProfile>;
   getGroupSummary(groupId: string): Promise<GroupSummary>;
+  getBotInfo(): Promise<BotInfo>;
+  getMessageQuota(): Promise<MessageQuota>;
+  getMessageQuotaConsumption(): Promise<MessageQuotaConsumption>;
+  getFollowerIds(start?: string): Promise<{ userIds: string[]; next?: string }>;
+  getNumberOfFollowers(date: string): Promise<InsightFollowers>;
+  getFriendDemographics(): Promise<unknown>;
 }
 
 export class LineMessagingClient implements LineService {
   private client: messagingApi.MessagingApiClient;
+  private insightClient: insight.InsightClient;
 
   constructor(channelAccessToken: string) {
     this.client = new messagingApi.MessagingApiClient({ channelAccessToken });
+    this.insightClient = new insight.InsightClient({ channelAccessToken });
   }
 
   async pushTextMessage(to: string, text: string): Promise<void> {
@@ -144,6 +190,56 @@ export class LineMessagingClient implements LineService {
       groupName: summary.groupName,
       pictureUrl: summary.pictureUrl,
     };
+  }
+
+  async getBotInfo(): Promise<BotInfo> {
+    const info = await this.client.getBotInfo();
+    return {
+      userId: info.userId,
+      basicId: info.basicId,
+      premiumId: info.premiumId,
+      displayName: info.displayName,
+      pictureUrl: info.pictureUrl,
+      chatMode: info.chatMode,
+      markAsReadMode: info.markAsReadMode,
+    };
+  }
+
+  async getMessageQuota(): Promise<MessageQuota> {
+    const quota = await this.client.getMessageQuota();
+    return {
+      type: quota.type,
+      value: quota.value,
+    };
+  }
+
+  async getMessageQuotaConsumption(): Promise<MessageQuotaConsumption> {
+    const consumption = await this.client.getMessageQuotaConsumption();
+    return {
+      totalUsage: consumption.totalUsage,
+    };
+  }
+
+  async getFollowerIds(start?: string): Promise<{ userIds: string[]; next?: string }> {
+    const response = await this.client.getFollowers(start);
+    return {
+      userIds: response.userIds,
+      next: response.next,
+    };
+  }
+
+  async getNumberOfFollowers(date: string): Promise<InsightFollowers> {
+    const response = await this.insightClient.getNumberOfFollowers(date);
+    return {
+      status: response.status ?? 'unready',
+      followers: response.followers,
+      targetedReaches: response.targetedReaches,
+      blocks: response.blocks,
+    };
+  }
+
+  async getFriendDemographics(): Promise<unknown> {
+    return await this.insightClient.getFriendsDemographics();
   }
 
 }
