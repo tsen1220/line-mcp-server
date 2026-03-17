@@ -152,6 +152,8 @@ export interface LineService {
   getGroupMemberProfile(groupId: string, userId: string): Promise<UserProfile>;
   leaveGroup(groupId: string): Promise<void>;
   getRoomMemberCount(roomId: string): Promise<number>;
+  getRoomMemberIds(roomId: string): Promise<string[]>;
+  getRoomMemberProfile(roomId: string, userId: string): Promise<UserProfile>;
   leaveRoom(roomId: string): Promise<void>;
   createRichMenu(richMenu: Record<string, unknown>): Promise<{ richMenuId: string }>;
   getRichMenuList(): Promise<RichMenuResponse[]>;
@@ -168,6 +170,13 @@ export interface LineService {
   getFollowerIds(start?: string): Promise<{ userIds: string[]; next?: string }>;
   getNumberOfFollowers(date: string): Promise<InsightFollowers>;
   getFriendDemographics(): Promise<FriendDemographics>;
+  getNumberOfSentReplyMessages(date: string): Promise<unknown>;
+  getNumberOfSentPushMessages(date: string): Promise<unknown>;
+  getNumberOfSentMulticastMessages(date: string): Promise<unknown>;
+  getNumberOfSentBroadcastMessages(date: string): Promise<unknown>;
+  getNumberOfMessageDeliveries(date: string): Promise<unknown>;
+  getMessageEvent(requestId: string): Promise<unknown>;
+  getStatisticsPerUnit(customAggregationUnit: string, from: string, to: string): Promise<unknown>;
 }
 
 export class LineMessagingClient implements LineService {
@@ -363,6 +372,26 @@ export class LineMessagingClient implements LineService {
     return response.count;
   }
 
+  async getRoomMemberIds(roomId: string): Promise<string[]> {
+    const allMemberIds: string[] = [];
+    let start: string | undefined;
+    do {
+      const response = await this.client.getRoomMembersIds(roomId, start);
+      allMemberIds.push(...response.memberIds);
+      start = response.next;
+    } while (start);
+    return allMemberIds;
+  }
+
+  async getRoomMemberProfile(roomId: string, userId: string): Promise<UserProfile> {
+    const profile = await this.client.getRoomMemberProfile(roomId, userId);
+    return {
+      displayName: profile.displayName,
+      userId: profile.userId,
+      pictureUrl: profile.pictureUrl,
+    };
+  }
+
   async leaveRoom(roomId: string): Promise<void> {
     await this.client.leaveRoom(roomId);
   }
@@ -454,6 +483,34 @@ export class LineMessagingClient implements LineService {
 
   async getFriendDemographics(): Promise<FriendDemographics> {
     return await this.insightClient.getFriendsDemographics();
+  }
+
+  async getNumberOfSentReplyMessages(date: string): Promise<unknown> {
+    return await this.client.getNumberOfSentReplyMessages(date);
+  }
+
+  async getNumberOfSentPushMessages(date: string): Promise<unknown> {
+    return await this.client.getNumberOfSentPushMessages(date);
+  }
+
+  async getNumberOfSentMulticastMessages(date: string): Promise<unknown> {
+    return await this.client.getNumberOfSentMulticastMessages(date);
+  }
+
+  async getNumberOfSentBroadcastMessages(date: string): Promise<unknown> {
+    return await this.client.getNumberOfSentBroadcastMessages(date);
+  }
+
+  async getNumberOfMessageDeliveries(date: string): Promise<unknown> {
+    return await this.insightClient.getNumberOfMessageDeliveries(date);
+  }
+
+  async getMessageEvent(requestId: string): Promise<unknown> {
+    return await this.insightClient.getMessageEvent(requestId);
+  }
+
+  async getStatisticsPerUnit(customAggregationUnit: string, from: string, to: string): Promise<unknown> {
+    return await this.insightClient.getStatisticsPerUnit(customAggregationUnit, from, to);
   }
 
 }

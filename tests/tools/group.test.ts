@@ -25,8 +25,8 @@ describe('group tools', () => {
     ({ handlers } = registerAndCapture(lineService));
   });
 
-  it('registers 6 tools', () => {
-    expect(handlers.size).toBe(6);
+  it('registers 8 tools', () => {
+    expect(handlers.size).toBe(8);
   });
 
   describe('get_group_member_count', () => {
@@ -139,6 +139,70 @@ describe('group tools', () => {
       const result: any = await handlers.get('leave_group')!({ groupId: 'C999' });
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('HTTP 403');
+    });
+  });
+
+  describe('get_room_member_ids', () => {
+    it('returns member IDs as JSON array', async () => {
+      vi.mocked(lineService.getRoomMemberIds).mockResolvedValue(['U001', 'U002']);
+      const result: any = await handlers.get('get_room_member_ids')!({ roomId: 'R123' });
+      const parsed = JSON.parse(result.content[0].text);
+      expect(parsed).toEqual(['U001', 'U002']);
+      expect(result.isError).toBeUndefined();
+    });
+
+    it('returns error on failure', async () => {
+      vi.mocked(lineService.getRoomMemberIds).mockRejectedValue(new Error('forbidden'));
+      const result: any = await handlers.get('get_room_member_ids')!({ roomId: 'R999' });
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Failed');
+    });
+
+    it('returns LINE API status code on API error', async () => {
+      const err = Object.assign(new Error('Forbidden'), { statusCode: 403 });
+      vi.mocked(lineService.getRoomMemberIds).mockRejectedValue(err);
+      const result: any = await handlers.get('get_room_member_ids')!({ roomId: 'R999' });
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('HTTP 403');
+    });
+  });
+
+  describe('get_room_member_profile', () => {
+    it('returns profile JSON', async () => {
+      vi.mocked(lineService.getRoomMemberProfile).mockResolvedValue({
+        displayName: 'Alice',
+        userId: 'U789',
+        pictureUrl: 'https://pic.com/alice.jpg',
+      });
+      const result: any = await handlers.get('get_room_member_profile')!({
+        roomId: 'R123',
+        userId: 'U789',
+      });
+      const parsed = JSON.parse(result.content[0].text);
+      expect(parsed.displayName).toBe('Alice');
+      expect(parsed.userId).toBe('U789');
+      expect(result.isError).toBeUndefined();
+    });
+
+    it('returns error on failure', async () => {
+      vi.mocked(lineService.getRoomMemberProfile).mockRejectedValue(new Error('not found'));
+      const result: any = await handlers.get('get_room_member_profile')!({
+        roomId: 'R123',
+        userId: 'U999',
+      });
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Failed');
+    });
+
+    it('returns LINE API status code on API error', async () => {
+      const err = Object.assign(new Error('Not Found'), { statusCode: 404 });
+      vi.mocked(lineService.getRoomMemberProfile).mockRejectedValue(err);
+      const result: any = await handlers.get('get_room_member_profile')!({
+        roomId: 'R123',
+        userId: 'U999',
+      });
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('HTTP 404');
     });
   });
 

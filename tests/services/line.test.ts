@@ -27,6 +27,15 @@ const mockGetMessageQuotaConsumption = vi.fn();
 const mockGetFollowers = vi.fn();
 const mockGetNumberOfFollowers = vi.fn();
 const mockGetFriendsDemographics = vi.fn();
+const mockGetRoomMembersIds = vi.fn();
+const mockGetRoomMemberProfile = vi.fn();
+const mockGetNumberOfSentReplyMessages = vi.fn();
+const mockGetNumberOfSentPushMessages = vi.fn();
+const mockGetNumberOfSentMulticastMessages = vi.fn();
+const mockGetNumberOfSentBroadcastMessages = vi.fn();
+const mockGetNumberOfMessageDeliveries = vi.fn();
+const mockGetMessageEvent = vi.fn();
+const mockGetStatisticsPerUnit = vi.fn();
 vi.mock('@line/bot-sdk', () => ({
   messagingApi: {
     MessagingApiClient: class {
@@ -41,6 +50,8 @@ vi.mock('@line/bot-sdk', () => ({
       getGroupMemberProfile = mockGetGroupMemberProfile;
       leaveGroup = mockLeaveGroup;
       getRoomMemberCount = mockGetRoomMemberCount;
+      getRoomMembersIds = mockGetRoomMembersIds;
+      getRoomMemberProfile = mockGetRoomMemberProfile;
       leaveRoom = mockLeaveRoom;
       createRichMenu = mockCreateRichMenu;
       getRichMenuList = mockGetRichMenuList;
@@ -55,12 +66,19 @@ vi.mock('@line/bot-sdk', () => ({
       getMessageQuota = mockGetMessageQuota;
       getMessageQuotaConsumption = mockGetMessageQuotaConsumption;
       getFollowers = mockGetFollowers;
+      getNumberOfSentReplyMessages = mockGetNumberOfSentReplyMessages;
+      getNumberOfSentPushMessages = mockGetNumberOfSentPushMessages;
+      getNumberOfSentMulticastMessages = mockGetNumberOfSentMulticastMessages;
+      getNumberOfSentBroadcastMessages = mockGetNumberOfSentBroadcastMessages;
     },
   },
   insight: {
     InsightClient: class {
       getNumberOfFollowers = mockGetNumberOfFollowers;
       getFriendsDemographics = mockGetFriendsDemographics;
+      getNumberOfMessageDeliveries = mockGetNumberOfMessageDeliveries;
+      getMessageEvent = mockGetMessageEvent;
+      getStatisticsPerUnit = mockGetStatisticsPerUnit;
     },
   },
 }));
@@ -703,6 +721,175 @@ describe('LineMessagingClient', () => {
     it('propagates SDK errors', async () => {
       mockGetFriendsDemographics.mockRejectedValue(new Error('fail'));
       await expect(service.getFriendDemographics()).rejects.toThrow('fail');
+    });
+  });
+
+  describe('getRoomMemberIds', () => {
+    it('returns all member IDs from a single page', async () => {
+      mockGetRoomMembersIds.mockResolvedValue({
+        memberIds: ['U001', 'U002'],
+      });
+      const ids = await service.getRoomMemberIds('R123');
+      expect(ids).toEqual(['U001', 'U002']);
+      expect(mockGetRoomMembersIds).toHaveBeenCalledWith('R123', undefined);
+    });
+
+    it('paginates through multiple pages', async () => {
+      mockGetRoomMembersIds
+        .mockResolvedValueOnce({ memberIds: ['U001', 'U002'], next: 'token1' })
+        .mockResolvedValueOnce({ memberIds: ['U003'], next: 'token2' })
+        .mockResolvedValueOnce({ memberIds: ['U004'] });
+      const ids = await service.getRoomMemberIds('R123');
+      expect(ids).toEqual(['U001', 'U002', 'U003', 'U004']);
+      expect(mockGetRoomMembersIds).toHaveBeenCalledTimes(3);
+      expect(mockGetRoomMembersIds).toHaveBeenNthCalledWith(1, 'R123', undefined);
+      expect(mockGetRoomMembersIds).toHaveBeenNthCalledWith(2, 'R123', 'token1');
+      expect(mockGetRoomMembersIds).toHaveBeenNthCalledWith(3, 'R123', 'token2');
+    });
+
+    it('propagates SDK errors', async () => {
+      mockGetRoomMembersIds.mockRejectedValue(new Error('forbidden'));
+      await expect(service.getRoomMemberIds('R123')).rejects.toThrow('forbidden');
+    });
+  });
+
+  describe('getRoomMemberProfile', () => {
+    it('returns mapped profile', async () => {
+      mockGetRoomMemberProfile.mockResolvedValue({
+        displayName: 'Alice',
+        userId: 'U789',
+        pictureUrl: 'https://pic.com/alice.jpg',
+      });
+      const profile = await service.getRoomMemberProfile('R123', 'U789');
+      expect(profile).toEqual({
+        displayName: 'Alice',
+        userId: 'U789',
+        pictureUrl: 'https://pic.com/alice.jpg',
+      });
+      expect(mockGetRoomMemberProfile).toHaveBeenCalledWith('R123', 'U789');
+    });
+
+    it('handles profile without pictureUrl', async () => {
+      mockGetRoomMemberProfile.mockResolvedValue({
+        displayName: 'Bob',
+        userId: 'U456',
+      });
+      const profile = await service.getRoomMemberProfile('R123', 'U456');
+      expect(profile).toEqual({
+        displayName: 'Bob',
+        userId: 'U456',
+        pictureUrl: undefined,
+      });
+    });
+
+    it('propagates SDK errors', async () => {
+      mockGetRoomMemberProfile.mockRejectedValue(new Error('not found'));
+      await expect(service.getRoomMemberProfile('R123', 'U789')).rejects.toThrow('not found');
+    });
+  });
+
+  describe('getNumberOfSentReplyMessages', () => {
+    it('returns sent reply message stats', async () => {
+      const response = { status: 'ready', success: 100 };
+      mockGetNumberOfSentReplyMessages.mockResolvedValue(response);
+      const result = await service.getNumberOfSentReplyMessages('20240101');
+      expect(result).toEqual(response);
+      expect(mockGetNumberOfSentReplyMessages).toHaveBeenCalledWith('20240101');
+    });
+
+    it('propagates SDK errors', async () => {
+      mockGetNumberOfSentReplyMessages.mockRejectedValue(new Error('fail'));
+      await expect(service.getNumberOfSentReplyMessages('20240101')).rejects.toThrow('fail');
+    });
+  });
+
+  describe('getNumberOfSentPushMessages', () => {
+    it('returns sent push message stats', async () => {
+      const response = { status: 'ready', success: 200 };
+      mockGetNumberOfSentPushMessages.mockResolvedValue(response);
+      const result = await service.getNumberOfSentPushMessages('20240101');
+      expect(result).toEqual(response);
+      expect(mockGetNumberOfSentPushMessages).toHaveBeenCalledWith('20240101');
+    });
+
+    it('propagates SDK errors', async () => {
+      mockGetNumberOfSentPushMessages.mockRejectedValue(new Error('fail'));
+      await expect(service.getNumberOfSentPushMessages('20240101')).rejects.toThrow('fail');
+    });
+  });
+
+  describe('getNumberOfSentMulticastMessages', () => {
+    it('returns sent multicast message stats', async () => {
+      const response = { status: 'ready', success: 50 };
+      mockGetNumberOfSentMulticastMessages.mockResolvedValue(response);
+      const result = await service.getNumberOfSentMulticastMessages('20240101');
+      expect(result).toEqual(response);
+      expect(mockGetNumberOfSentMulticastMessages).toHaveBeenCalledWith('20240101');
+    });
+
+    it('propagates SDK errors', async () => {
+      mockGetNumberOfSentMulticastMessages.mockRejectedValue(new Error('fail'));
+      await expect(service.getNumberOfSentMulticastMessages('20240101')).rejects.toThrow('fail');
+    });
+  });
+
+  describe('getNumberOfSentBroadcastMessages', () => {
+    it('returns sent broadcast message stats', async () => {
+      const response = { status: 'ready', success: 300 };
+      mockGetNumberOfSentBroadcastMessages.mockResolvedValue(response);
+      const result = await service.getNumberOfSentBroadcastMessages('20240101');
+      expect(result).toEqual(response);
+      expect(mockGetNumberOfSentBroadcastMessages).toHaveBeenCalledWith('20240101');
+    });
+
+    it('propagates SDK errors', async () => {
+      mockGetNumberOfSentBroadcastMessages.mockRejectedValue(new Error('fail'));
+      await expect(service.getNumberOfSentBroadcastMessages('20240101')).rejects.toThrow('fail');
+    });
+  });
+
+  describe('getNumberOfMessageDeliveries', () => {
+    it('returns message delivery stats', async () => {
+      const response = { status: 'ready', broadcast: 100, targeting: 200 };
+      mockGetNumberOfMessageDeliveries.mockResolvedValue(response);
+      const result = await service.getNumberOfMessageDeliveries('20240101');
+      expect(result).toEqual(response);
+      expect(mockGetNumberOfMessageDeliveries).toHaveBeenCalledWith('20240101');
+    });
+
+    it('propagates SDK errors', async () => {
+      mockGetNumberOfMessageDeliveries.mockRejectedValue(new Error('fail'));
+      await expect(service.getNumberOfMessageDeliveries('20240101')).rejects.toThrow('fail');
+    });
+  });
+
+  describe('getMessageEvent', () => {
+    it('returns message event stats', async () => {
+      const response = { overview: { requestId: 'req-001' }, messages: [], clicks: [] };
+      mockGetMessageEvent.mockResolvedValue(response);
+      const result = await service.getMessageEvent('req-001');
+      expect(result).toEqual(response);
+      expect(mockGetMessageEvent).toHaveBeenCalledWith('req-001');
+    });
+
+    it('propagates SDK errors', async () => {
+      mockGetMessageEvent.mockRejectedValue(new Error('fail'));
+      await expect(service.getMessageEvent('req-001')).rejects.toThrow('fail');
+    });
+  });
+
+  describe('getStatisticsPerUnit', () => {
+    it('returns statistics per unit', async () => {
+      const response = { overview: { uniqueImpression: 100 }, messages: [], clicks: [] };
+      mockGetStatisticsPerUnit.mockResolvedValue(response);
+      const result = await service.getStatisticsPerUnit('promotion_a', '20240101', '20240131');
+      expect(result).toEqual(response);
+      expect(mockGetStatisticsPerUnit).toHaveBeenCalledWith('promotion_a', '20240101', '20240131');
+    });
+
+    it('propagates SDK errors', async () => {
+      mockGetStatisticsPerUnit.mockRejectedValue(new Error('fail'));
+      await expect(service.getStatisticsPerUnit('unit', '20240101', '20240131')).rejects.toThrow('fail');
     });
   });
 

@@ -172,4 +172,230 @@ export function registerInsightTools(
     },
   );
 
+  server.registerTool(
+    'get_sent_reply_count',
+    {
+      title: 'Get Sent Reply Message Count',
+      description:
+        'Get the number of reply messages sent on a specified date.',
+      inputSchema: z.object({
+        date: z
+          .string()
+          .regex(/^\d{8}$/, 'Date must be in yyyyMMdd format')
+          .describe('Date in yyyyMMdd format (e.g. 20240101). Must be exactly 8 digits. Timezone: UTC+9'),
+      }),
+    },
+    async ({ date }) => {
+      try {
+        const result = await lineService.getNumberOfSentReplyMessages(date);
+        return {
+          content: [
+            { type: 'text', text: JSON.stringify(result, null, 2) },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            { type: 'text', text: `Failed to get sent reply count: ${formatLineError(error)}` },
+          ],
+          isError: true,
+        };
+      }
+    },
+  );
+
+  server.registerTool(
+    'get_sent_push_count',
+    {
+      title: 'Get Sent Push Message Count',
+      description:
+        'Get the number of push messages sent on a specified date.',
+      inputSchema: z.object({
+        date: z
+          .string()
+          .regex(/^\d{8}$/, 'Date must be in yyyyMMdd format')
+          .describe('Date in yyyyMMdd format (e.g. 20240101). Must be exactly 8 digits. Timezone: UTC+9'),
+      }),
+    },
+    async ({ date }) => {
+      try {
+        const result = await lineService.getNumberOfSentPushMessages(date);
+        return {
+          content: [
+            { type: 'text', text: JSON.stringify(result, null, 2) },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            { type: 'text', text: `Failed to get sent push count: ${formatLineError(error)}` },
+          ],
+          isError: true,
+        };
+      }
+    },
+  );
+
+  server.registerTool(
+    'get_sent_multicast_count',
+    {
+      title: 'Get Sent Multicast Message Count',
+      description:
+        'Get the number of multicast messages sent on a specified date.',
+      inputSchema: z.object({
+        date: z
+          .string()
+          .regex(/^\d{8}$/, 'Date must be in yyyyMMdd format')
+          .describe('Date in yyyyMMdd format (e.g. 20240101). Must be exactly 8 digits. Timezone: UTC+9'),
+      }),
+    },
+    async ({ date }) => {
+      try {
+        const result = await lineService.getNumberOfSentMulticastMessages(date);
+        return {
+          content: [
+            { type: 'text', text: JSON.stringify(result, null, 2) },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            { type: 'text', text: `Failed to get sent multicast count: ${formatLineError(error)}` },
+          ],
+          isError: true,
+        };
+      }
+    },
+  );
+
+  server.registerTool(
+    'get_sent_broadcast_count',
+    {
+      title: 'Get Sent Broadcast Message Count',
+      description:
+        'Get the number of broadcast messages sent on a specified date.',
+      inputSchema: z.object({
+        date: z
+          .string()
+          .regex(/^\d{8}$/, 'Date must be in yyyyMMdd format')
+          .describe('Date in yyyyMMdd format (e.g. 20240101). Must be exactly 8 digits. Timezone: UTC+9'),
+      }),
+    },
+    async ({ date }) => {
+      try {
+        const result = await lineService.getNumberOfSentBroadcastMessages(date);
+        return {
+          content: [
+            { type: 'text', text: JSON.stringify(result, null, 2) },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            { type: 'text', text: `Failed to get sent broadcast count: ${formatLineError(error)}` },
+          ],
+          isError: true,
+        };
+      }
+    },
+  );
+
+  server.registerTool(
+    'get_message_deliveries',
+    {
+      title: 'Get Message Deliveries',
+      description:
+        'Get the number of message deliveries on a specified date, including breakdowns by API type.',
+      inputSchema: z.object({
+        date: z
+          .string()
+          .regex(/^\d{8}$/, 'Date must be in yyyyMMdd format')
+          .describe('Date in yyyyMMdd format (e.g. 20240101). Must be exactly 8 digits. Timezone: UTC+9'),
+      }),
+    },
+    async ({ date }) => {
+      try {
+        const result = await lineService.getNumberOfMessageDeliveries(date);
+        return {
+          content: [
+            { type: 'text', text: JSON.stringify(result, null, 2) },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            { type: 'text', text: `Failed to get message deliveries: ${formatLineError(error)}` },
+          ],
+          isError: true,
+        };
+      }
+    },
+  );
+
+  server.registerTool(
+    'get_message_event',
+    {
+      title: 'Get Message Event',
+      description:
+        'Get statistics about how users interact with messages, including impressions, clicks, and other engagement metrics.',
+      inputSchema: z.object({
+        requestId: z.string().min(1).describe('Request ID of a sent message'),
+      }),
+    },
+    async ({ requestId }) => {
+      try {
+        const result = await lineService.getMessageEvent(requestId);
+        return {
+          content: [
+            { type: 'text', text: JSON.stringify(result, null, 2) },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            { type: 'text', text: `Failed to get message event: ${formatLineError(error)}` },
+          ],
+          isError: true,
+        };
+      }
+    },
+  );
+
+  server.registerTool(
+    'get_statistics_per_unit',
+    {
+      title: 'Get Statistics Per Unit',
+      description:
+        'Get statistics per custom aggregation unit for messages sent within a specified date range.',
+      inputSchema: z.object({
+        customAggregationUnit: z.string().min(1).describe('Name of the custom aggregation unit'),
+        from: z
+          .string()
+          .regex(/^\d{8}$/, 'Date must be in yyyyMMdd format')
+          .describe('Start date in yyyyMMdd format (e.g. 20240101). Timezone: UTC+9'),
+        to: z
+          .string()
+          .regex(/^\d{8}$/, 'Date must be in yyyyMMdd format')
+          .describe('End date in yyyyMMdd format (e.g. 20240131). Timezone: UTC+9'),
+      }),
+    },
+    async ({ customAggregationUnit, from, to }) => {
+      try {
+        const result = await lineService.getStatisticsPerUnit(customAggregationUnit, from, to);
+        return {
+          content: [
+            { type: 'text', text: JSON.stringify(result, null, 2) },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            { type: 'text', text: `Failed to get statistics per unit: ${formatLineError(error)}` },
+          ],
+          isError: true,
+        };
+      }
+    },
+  );
+
 }

@@ -2,7 +2,7 @@ import { vi } from 'vitest';
 import type { LineService } from '../../src/services/line.js';
 
 /**
- * Creates a fully-mocked LineService with all 35 methods stubbed.
+ * Creates a fully-mocked LineService with all 44 methods stubbed.
  * Void methods resolve to `undefined`; data-returning methods provide sensible defaults.
  *
  * Tests can override individual mocks as needed via:
@@ -38,7 +38,7 @@ export function createMockLineService(): LineService {
       pictureUrl: 'https://pic.com/group.jpg',
     }),
 
-    // Group (6)
+    // Group (8)
     getGroupMemberCount: vi.fn().mockResolvedValue(42),
     getGroupMemberIds: vi.fn().mockResolvedValue(['U001', 'U002', 'U003']),
     getGroupMemberProfile: vi.fn().mockResolvedValue({
@@ -48,6 +48,12 @@ export function createMockLineService(): LineService {
     }),
     leaveGroup: vi.fn().mockResolvedValue(undefined),
     getRoomMemberCount: vi.fn().mockResolvedValue(5),
+    getRoomMemberIds: vi.fn().mockResolvedValue(['U001', 'U002']),
+    getRoomMemberProfile: vi.fn().mockResolvedValue({
+      displayName: 'Room Member',
+      userId: 'U001',
+      pictureUrl: 'https://pic.com/room-member.jpg',
+    }),
     leaveRoom: vi.fn().mockResolvedValue(undefined),
 
     // Rich Menu (9)
@@ -66,7 +72,7 @@ export function createMockLineService(): LineService {
     linkRichMenuToUser: vi.fn().mockResolvedValue(undefined),
     unlinkRichMenuFromUser: vi.fn().mockResolvedValue(undefined),
 
-    // Insight (6)
+    // Insight (13)
     getBotInfo: vi.fn().mockResolvedValue({
       userId: 'U-bot',
       basicId: '@bot',
@@ -89,6 +95,37 @@ export function createMockLineService(): LineService {
     getFriendDemographics: vi.fn().mockResolvedValue({
       available: true,
       genders: [{ gender: 'male', percentage: 60 }],
+    }),
+    getNumberOfSentReplyMessages: vi.fn().mockResolvedValue({
+      status: 'ready',
+      success: 100,
+    }),
+    getNumberOfSentPushMessages: vi.fn().mockResolvedValue({
+      status: 'ready',
+      success: 200,
+    }),
+    getNumberOfSentMulticastMessages: vi.fn().mockResolvedValue({
+      status: 'ready',
+      success: 50,
+    }),
+    getNumberOfSentBroadcastMessages: vi.fn().mockResolvedValue({
+      status: 'ready',
+      success: 300,
+    }),
+    getNumberOfMessageDeliveries: vi.fn().mockResolvedValue({
+      status: 'ready',
+      broadcast: 100,
+      targeting: 200,
+    }),
+    getMessageEvent: vi.fn().mockResolvedValue({
+      overview: { requestId: 'req-001', timestamp: 1234567890 },
+      messages: [],
+      clicks: [],
+    }),
+    getStatisticsPerUnit: vi.fn().mockResolvedValue({
+      overview: { uniqueImpression: 100, uniqueClick: 50 },
+      messages: [],
+      clicks: [],
     }),
   };
 }
