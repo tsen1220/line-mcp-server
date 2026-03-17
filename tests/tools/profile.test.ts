@@ -14,6 +14,12 @@ function createMockLineService(): LineService {
     multicastTextMessage: vi.fn(),
     getUserProfile: vi.fn(),
     getGroupSummary: vi.fn(),
+    getGroupMemberCount: vi.fn(),
+    getGroupMemberIds: vi.fn(),
+    getGroupMemberProfile: vi.fn(),
+    leaveGroup: vi.fn(),
+    getRoomMemberCount: vi.fn(),
+    leaveRoom: vi.fn(),
   };
 }
 

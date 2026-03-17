@@ -5,6 +5,12 @@ const mockBroadcast = vi.fn().mockResolvedValue({});
 const mockMulticast = vi.fn().mockResolvedValue({});
 const mockGetProfile = vi.fn();
 const mockGetGroupSummary = vi.fn();
+const mockGetGroupMemberCount = vi.fn();
+const mockGetGroupMembersIds = vi.fn();
+const mockGetGroupMemberProfile = vi.fn();
+const mockLeaveGroup = vi.fn().mockResolvedValue({});
+const mockGetRoomMemberCount = vi.fn();
+const mockLeaveRoom = vi.fn().mockResolvedValue({});
 vi.mock('@line/bot-sdk', () => ({
   messagingApi: {
     MessagingApiClient: class {
@@ -13,6 +19,12 @@ vi.mock('@line/bot-sdk', () => ({
       multicast = mockMulticast;
       getProfile = mockGetProfile;
       getGroupSummary = mockGetGroupSummary;
+      getGroupMemberCount = mockGetGroupMemberCount;
+      getGroupMembersIds = mockGetGroupMembersIds;
+      getGroupMemberProfile = mockGetGroupMemberProfile;
+      leaveGroup = mockLeaveGroup;
+      getRoomMemberCount = mockGetRoomMemberCount;
+      leaveRoom = mockLeaveRoom;
     },
   },
 }));
@@ -173,6 +185,122 @@ describe('LineMessagingClient', () => {
     it('propagates SDK errors', async () => {
       mockPushMessage.mockRejectedValue(new Error('push failed'));
       await expect(service.pushTextMessage('U123', 'Hi')).rejects.toThrow('push failed');
+    });
+  });
+
+  describe('getGroupMemberCount', () => {
+    it('returns the count', async () => {
+      mockGetGroupMemberCount.mockResolvedValue({ count: 42 });
+      const count = await service.getGroupMemberCount('C123');
+      expect(count).toBe(42);
+      expect(mockGetGroupMemberCount).toHaveBeenCalledWith('C123');
+    });
+
+    it('propagates SDK errors', async () => {
+      mockGetGroupMemberCount.mockRejectedValue(new Error('forbidden'));
+      await expect(service.getGroupMemberCount('C123')).rejects.toThrow('forbidden');
+    });
+  });
+
+  describe('getGroupMemberIds', () => {
+    it('returns all member IDs from a single page', async () => {
+      mockGetGroupMembersIds.mockResolvedValue({
+        memberIds: ['U001', 'U002'],
+      });
+      const ids = await service.getGroupMemberIds('C123');
+      expect(ids).toEqual(['U001', 'U002']);
+      expect(mockGetGroupMembersIds).toHaveBeenCalledWith('C123', undefined);
+    });
+
+    it('paginates through multiple pages', async () => {
+      mockGetGroupMembersIds
+        .mockResolvedValueOnce({ memberIds: ['U001', 'U002'], next: 'token1' })
+        .mockResolvedValueOnce({ memberIds: ['U003'], next: 'token2' })
+        .mockResolvedValueOnce({ memberIds: ['U004'] });
+      const ids = await service.getGroupMemberIds('C123');
+      expect(ids).toEqual(['U001', 'U002', 'U003', 'U004']);
+      expect(mockGetGroupMembersIds).toHaveBeenCalledTimes(3);
+      expect(mockGetGroupMembersIds).toHaveBeenNthCalledWith(1, 'C123', undefined);
+      expect(mockGetGroupMembersIds).toHaveBeenNthCalledWith(2, 'C123', 'token1');
+      expect(mockGetGroupMembersIds).toHaveBeenNthCalledWith(3, 'C123', 'token2');
+    });
+
+    it('propagates SDK errors', async () => {
+      mockGetGroupMembersIds.mockRejectedValue(new Error('forbidden'));
+      await expect(service.getGroupMemberIds('C123')).rejects.toThrow('forbidden');
+    });
+  });
+
+  describe('getGroupMemberProfile', () => {
+    it('returns mapped profile', async () => {
+      mockGetGroupMemberProfile.mockResolvedValue({
+        displayName: 'Alice',
+        userId: 'U789',
+        pictureUrl: 'https://pic.com/alice.jpg',
+      });
+      const profile = await service.getGroupMemberProfile('C123', 'U789');
+      expect(profile).toEqual({
+        displayName: 'Alice',
+        userId: 'U789',
+        pictureUrl: 'https://pic.com/alice.jpg',
+      });
+      expect(mockGetGroupMemberProfile).toHaveBeenCalledWith('C123', 'U789');
+    });
+
+    it('handles profile without pictureUrl', async () => {
+      mockGetGroupMemberProfile.mockResolvedValue({
+        displayName: 'Bob',
+        userId: 'U456',
+      });
+      const profile = await service.getGroupMemberProfile('C123', 'U456');
+      expect(profile).toEqual({
+        displayName: 'Bob',
+        userId: 'U456',
+        pictureUrl: undefined,
+      });
+    });
+
+    it('propagates SDK errors', async () => {
+      mockGetGroupMemberProfile.mockRejectedValue(new Error('not found'));
+      await expect(service.getGroupMemberProfile('C123', 'U789')).rejects.toThrow('not found');
+    });
+  });
+
+  describe('leaveGroup', () => {
+    it('calls leaveGroup on the SDK', async () => {
+      await service.leaveGroup('C123');
+      expect(mockLeaveGroup).toHaveBeenCalledWith('C123');
+    });
+
+    it('propagates SDK errors', async () => {
+      mockLeaveGroup.mockRejectedValue(new Error('forbidden'));
+      await expect(service.leaveGroup('C123')).rejects.toThrow('forbidden');
+    });
+  });
+
+  describe('getRoomMemberCount', () => {
+    it('returns the count', async () => {
+      mockGetRoomMemberCount.mockResolvedValue({ count: 5 });
+      const count = await service.getRoomMemberCount('R123');
+      expect(count).toBe(5);
+      expect(mockGetRoomMemberCount).toHaveBeenCalledWith('R123');
+    });
+
+    it('propagates SDK errors', async () => {
+      mockGetRoomMemberCount.mockRejectedValue(new Error('forbidden'));
+      await expect(service.getRoomMemberCount('R123')).rejects.toThrow('forbidden');
+    });
+  });
+
+  describe('leaveRoom', () => {
+    it('calls leaveRoom on the SDK', async () => {
+      await service.leaveRoom('R123');
+      expect(mockLeaveRoom).toHaveBeenCalledWith('R123');
+    });
+
+    it('propagates SDK errors', async () => {
+      mockLeaveRoom.mockRejectedValue(new Error('forbidden'));
+      await expect(service.leaveRoom('R123')).rejects.toThrow('forbidden');
     });
   });
 
