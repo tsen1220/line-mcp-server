@@ -1,4 +1,4 @@
-# line-mcp-tools
+# line-mcp-server
 
 MCP Server for LINE Messaging API — let AI agents send messages, manage groups, configure rich menus, and query analytics on LINE. Works with Claude Code, OpenClaw, and any MCP-compatible client.
 
@@ -95,8 +95,8 @@ To use group/room tools or send messages to groups and rooms:
 ## Setup
 
 ```bash
-git clone https://github.com/tsen1220/line-mcp-tools.git
-cd line-mcp-tools
+git clone https://github.com/tsen1220/line-mcp-server.git
+cd line-mcp-server
 npm install
 npm run build   # compiles TypeScript to dist/
 ```
@@ -104,9 +104,9 @@ npm run build   # compiles TypeScript to dist/
 ## Register in OpenClaw with mcporter
 
 ```bash
-mcporter config add line-mcp-tools \
+mcporter config add line-mcp-server \
   --command node \
-  --arg /path/to/line-mcp-tools/dist/index.js \
+  --arg /path/to/line-mcp-server/dist/index.js \
   --env CHANNEL_ACCESS_TOKEN=<your-token> \
   --description "LINE Messaging API tools"
 ```
@@ -114,23 +114,23 @@ mcporter config add line-mcp-tools \
 Verify registration:
 
 ```bash
-mcporter list line-mcp-tools --schema
+mcporter list line-mcp-server --schema
 ```
 
 Call tools directly:
 
 ```bash
-mcporter call line-mcp-tools.push_text_message to=U... text="Hello"
-mcporter call line-mcp-tools.get_user_profile userId=U...
-mcporter call line-mcp-tools.get_bot_info
+mcporter call line-mcp-server.push_text_message to=U... text="Hello"
+mcporter call line-mcp-server.get_user_profile userId=U...
+mcporter call line-mcp-server.get_bot_info
 ```
 
 ## Register in Claude Code
 
 ```bash
-claude mcp add line-mcp-tools -t stdio \
+claude mcp add line-mcp-server -t stdio \
   -e CHANNEL_ACCESS_TOKEN=<your-token> \
-  -- node /path/to/line-mcp-tools/dist/index.js
+  -- node /path/to/line-mcp-server/dist/index.js
 ```
 
 After registration, Claude can call LINE tools directly:

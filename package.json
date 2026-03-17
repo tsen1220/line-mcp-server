@@ -1,11 +1,11 @@
 {
-  "name": "line-mcp-tools",
+  "name": "line-mcp-server",
   "version": "1.0.0",
-  "description": "MCP server for LINE Messaging API — send messages to users, groups, and rooms",
+  "description": "MCP server for LINE Messaging API — send messages, manage groups, rich menus, and query analytics",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "line-mcp-tools": "dist/index.js"
+    "line-mcp-server": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",

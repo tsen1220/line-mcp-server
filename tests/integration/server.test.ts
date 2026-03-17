@@ -101,7 +101,7 @@ describe('MCP Server Integration', () => {
   let mockService: LineService;
 
   beforeAll(async () => {
-    server = new McpServer({ name: 'line-mcp-tools-test', version: '1.0.0' });
+    server = new McpServer({ name: 'line-mcp-server-test', version: '1.0.0' });
     mockService = createMockLineService();
 
     registerMessagingTools(server, mockService);

@@ -20,7 +20,7 @@ if (!channelAccessToken) {
 }
 
 const server = new McpServer({
-  name: 'line-mcp-tools',
+  name: 'line-mcp-server',
   version: '1.0.0',
 });
 
