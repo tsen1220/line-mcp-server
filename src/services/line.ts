@@ -30,6 +30,18 @@ export interface FlexContainer {
 }
 
 /**
+ * Rich menu response returned by the LINE Messaging API.
+ */
+export interface RichMenuResponse {
+  richMenuId: string;
+  name: string;
+  size: { width: number; height: number };
+  chatBarText: string;
+  selected: boolean;
+  areas: Array<{ bounds: { x: number; y: number; width: number; height: number }; action: Record<string, unknown> }>;
+}
+
+/**
  * Service interface for all LINE Messaging API operations.
  *
  * The `to` parameter in push methods accepts:
@@ -58,6 +70,15 @@ export interface LineService {
   multicastTextMessage(userIds: string[], text: string): Promise<void>;
   getUserProfile(userId: string): Promise<UserProfile>;
   getGroupSummary(groupId: string): Promise<GroupSummary>;
+  createRichMenu(richMenu: object): Promise<{ richMenuId: string }>;
+  getRichMenuList(): Promise<RichMenuResponse[]>;
+  getRichMenu(richMenuId: string): Promise<RichMenuResponse>;
+  deleteRichMenu(richMenuId: string): Promise<void>;
+  setDefaultRichMenu(richMenuId: string): Promise<void>;
+  getDefaultRichMenuId(): Promise<string>;
+  cancelDefaultRichMenu(): Promise<void>;
+  linkRichMenuToUser(userId: string, richMenuId: string): Promise<void>;
+  unlinkRichMenuFromUser(userId: string): Promise<void>;
 }
 
 export class LineMessagingClient implements LineService {
@@ -144,6 +165,45 @@ export class LineMessagingClient implements LineService {
       groupName: summary.groupName,
       pictureUrl: summary.pictureUrl,
     };
+  }
+
+  async createRichMenu(richMenu: object): Promise<{ richMenuId: string }> {
+    const result = await this.client.createRichMenu(richMenu as any);
+    return { richMenuId: result.richMenuId };
+  }
+
+  async getRichMenuList(): Promise<RichMenuResponse[]> {
+    const result = await this.client.getRichMenuList();
+    return result.richmenus as RichMenuResponse[];
+  }
+
+  async getRichMenu(richMenuId: string): Promise<RichMenuResponse> {
+    return await this.client.getRichMenu(richMenuId) as RichMenuResponse;
+  }
+
+  async deleteRichMenu(richMenuId: string): Promise<void> {
+    await this.client.deleteRichMenu(richMenuId);
+  }
+
+  async setDefaultRichMenu(richMenuId: string): Promise<void> {
+    await this.client.setDefaultRichMenu(richMenuId);
+  }
+
+  async getDefaultRichMenuId(): Promise<string> {
+    const result = await this.client.getDefaultRichMenuId();
+    return result.richMenuId;
+  }
+
+  async cancelDefaultRichMenu(): Promise<void> {
+    await this.client.cancelDefaultRichMenu();
+  }
+
+  async linkRichMenuToUser(userId: string, richMenuId: string): Promise<void> {
+    await this.client.linkRichMenuIdToUser(userId, richMenuId);
+  }
+
+  async unlinkRichMenuFromUser(userId: string): Promise<void> {
+    await this.client.unlinkRichMenuIdFromUser(userId);
   }
 
 }

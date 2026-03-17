@@ -14,6 +14,15 @@ function createMockLineService(): LineService {
     multicastTextMessage: vi.fn(),
     getUserProfile: vi.fn(),
     getGroupSummary: vi.fn(),
+    createRichMenu: vi.fn(),
+    getRichMenuList: vi.fn(),
+    getRichMenu: vi.fn(),
+    deleteRichMenu: vi.fn(),
+    setDefaultRichMenu: vi.fn(),
+    getDefaultRichMenuId: vi.fn(),
+    cancelDefaultRichMenu: vi.fn(),
+    linkRichMenuToUser: vi.fn(),
+    unlinkRichMenuFromUser: vi.fn(),
   };
 }
 
