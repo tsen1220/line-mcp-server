@@ -85,6 +85,12 @@ export interface LineService {
   showLoadingIndicator(chatId: string): Promise<void>;
   getUserProfile(userId: string): Promise<UserProfile>;
   getGroupSummary(groupId: string): Promise<GroupSummary>;
+  getGroupMemberCount(groupId: string): Promise<number>;
+  getGroupMemberIds(groupId: string): Promise<string[]>;
+  getGroupMemberProfile(groupId: string, userId: string): Promise<UserProfile>;
+  leaveGroup(groupId: string): Promise<void>;
+  getRoomMemberCount(roomId: string): Promise<number>;
+  leaveRoom(roomId: string): Promise<void>;
 }
 
 export class LineMessagingClient implements LineService {
@@ -242,6 +248,44 @@ export class LineMessagingClient implements LineService {
       groupName: summary.groupName,
       pictureUrl: summary.pictureUrl,
     };
+  }
+
+  async getGroupMemberCount(groupId: string): Promise<number> {
+    const response = await this.client.getGroupMemberCount(groupId);
+    return response.count;
+  }
+
+  async getGroupMemberIds(groupId: string): Promise<string[]> {
+    const allMemberIds: string[] = [];
+    let start: string | undefined;
+    do {
+      const response = await this.client.getGroupMembersIds(groupId, start);
+      allMemberIds.push(...response.memberIds);
+      start = response.next;
+    } while (start);
+    return allMemberIds;
+  }
+
+  async getGroupMemberProfile(groupId: string, userId: string): Promise<UserProfile> {
+    const profile = await this.client.getGroupMemberProfile(groupId, userId);
+    return {
+      displayName: profile.displayName,
+      userId: profile.userId,
+      pictureUrl: profile.pictureUrl,
+    };
+  }
+
+  async leaveGroup(groupId: string): Promise<void> {
+    await this.client.leaveGroup(groupId);
+  }
+
+  async getRoomMemberCount(roomId: string): Promise<number> {
+    const response = await this.client.getRoomMemberCount(roomId);
+    return response.count;
+  }
+
+  async leaveRoom(roomId: string): Promise<void> {
+    await this.client.leaveRoom(roomId);
   }
 
 }

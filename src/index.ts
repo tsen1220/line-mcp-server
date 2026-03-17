@@ -5,6 +5,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { LineMessagingClient } from './services/line.js';
 import { registerMessagingTools } from './tools/messaging.js';
 import { registerProfileTools } from './tools/profile.js';
+import { registerGroupTools } from './tools/group.js';
 
 const channelAccessToken = process.env.CHANNEL_ACCESS_TOKEN;
 
@@ -25,6 +26,7 @@ const lineService = new LineMessagingClient(channelAccessToken);
 
 registerMessagingTools(server, lineService);
 registerProfileTools(server, lineService);
+registerGroupTools(server, lineService);
 
 const transport = new StdioServerTransport();
 try {

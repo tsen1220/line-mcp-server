@@ -20,6 +20,12 @@ function createMockLineService(): LineService {
     showLoadingIndicator: vi.fn().mockResolvedValue(undefined),
     getUserProfile: vi.fn(),
     getGroupSummary: vi.fn(),
+    getGroupMemberCount: vi.fn(),
+    getGroupMemberIds: vi.fn(),
+    getGroupMemberProfile: vi.fn(),
+    leaveGroup: vi.fn(),
+    getRoomMemberCount: vi.fn(),
+    leaveRoom: vi.fn(),
   };
 }
 
