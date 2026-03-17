@@ -376,6 +376,15 @@ describe('LineMessagingClient', () => {
         displayName: 'Bob',
         userId: 'U456',
         pictureUrl: undefined,
+      });
+    });
+
+    it('propagates SDK errors', async () => {
+      mockGetGroupMemberProfile.mockRejectedValue(new Error('not found'));
+      await expect(service.getGroupMemberProfile('C123', 'U789')).rejects.toThrow('not found');
+    });
+  });
+
   describe('getBotInfo', () => {
     it('returns mapped bot info', async () => {
       mockGetBotInfo.mockResolvedValue({
@@ -420,8 +429,8 @@ describe('LineMessagingClient', () => {
     });
 
     it('propagates SDK errors', async () => {
-      mockGetGroupMemberProfile.mockRejectedValue(new Error('not found'));
-      await expect(service.getGroupMemberProfile('C123', 'U789')).rejects.toThrow('not found');
+      mockGetBotInfo.mockRejectedValue(new Error('bot info failed'));
+      await expect(service.getBotInfo()).rejects.toThrow('bot info failed');
     });
   });
 
@@ -460,6 +469,9 @@ describe('LineMessagingClient', () => {
     it('propagates SDK errors', async () => {
       mockLeaveRoom.mockRejectedValue(new Error('forbidden'));
       await expect(service.leaveRoom('R123')).rejects.toThrow('forbidden');
+    });
+  });
+
   describe('createRichMenu', () => {
     it('calls createRichMenu and returns richMenuId', async () => {
       mockCreateRichMenu.mockResolvedValue({ richMenuId: 'richmenu-123' });
@@ -573,8 +585,6 @@ describe('LineMessagingClient', () => {
     it('propagates SDK errors', async () => {
       mockUnlinkRichMenuIdFromUser.mockRejectedValue(new Error('unlink failed'));
       await expect(service.unlinkRichMenuFromUser('U123')).rejects.toThrow('unlink failed');
-      mockGetBotInfo.mockRejectedValue(new Error('unauthorized'));
-      await expect(service.getBotInfo()).rejects.toThrow('unauthorized');
     });
   });
 

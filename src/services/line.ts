@@ -39,6 +39,9 @@ export interface RichMenuResponse {
   chatBarText: string;
   selected: boolean;
   areas: Array<{ bounds: { x: number; y: number; width: number; height: number }; action: Record<string, unknown> }>;
+}
+
+/**
  * Bot information returned by the Messaging API.
  */
 export interface BotInfo {
@@ -350,6 +353,8 @@ export class LineMessagingClient implements LineService {
 
   async leaveRoom(roomId: string): Promise<void> {
     await this.client.leaveRoom(roomId);
+  }
+
   async createRichMenu(richMenu: object): Promise<{ richMenuId: string }> {
     const result = await this.client.createRichMenu(richMenu as any);
     return { richMenuId: result.richMenuId };
@@ -387,6 +392,8 @@ export class LineMessagingClient implements LineService {
 
   async unlinkRichMenuFromUser(userId: string): Promise<void> {
     await this.client.unlinkRichMenuIdFromUser(userId);
+  }
+
   async getBotInfo(): Promise<BotInfo> {
     const info = await this.client.getBotInfo();
     return {
