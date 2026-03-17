@@ -43,7 +43,7 @@ export function registerRichMenuTools(
       }
 
       try {
-        const result = await lineService.createRichMenu(parsed);
+        const result = await lineService.createRichMenu(parsed as Record<string, unknown>);
         return {
           content: [
             { type: 'text', text: JSON.stringify(result, null, 2) },

@@ -70,10 +70,22 @@ export interface MessageQuotaConsumption {
 }
 
 /**
+ * Friend demographics data returned by the LINE Insight API.
+ */
+export interface FriendDemographics {
+  available?: boolean;
+  genders?: Array<{ gender?: string; percentage?: number }>;
+  ages?: Array<{ age?: string; percentage?: number }>;
+  areas?: Array<{ area?: string; percentage?: number }>;
+  appTypes?: Array<{ appType?: string; percentage?: number }>;
+  subscriptionPeriods?: Array<{ subscriptionPeriod?: string; percentage?: number }>;
+}
+
+/**
  * Insight data on the number of followers.
  */
 export interface InsightFollowers {
-  status: string;
+  status: 'ready' | 'unready' | 'out_of_service';
   followers?: number;
   targetedReaches?: number;
   blocks?: number;
@@ -141,7 +153,7 @@ export interface LineService {
   leaveGroup(groupId: string): Promise<void>;
   getRoomMemberCount(roomId: string): Promise<number>;
   leaveRoom(roomId: string): Promise<void>;
-  createRichMenu(richMenu: object): Promise<{ richMenuId: string }>;
+  createRichMenu(richMenu: Record<string, unknown>): Promise<{ richMenuId: string }>;
   getRichMenuList(): Promise<RichMenuResponse[]>;
   getRichMenu(richMenuId: string): Promise<RichMenuResponse>;
   deleteRichMenu(richMenuId: string): Promise<void>;
@@ -155,7 +167,7 @@ export interface LineService {
   getMessageQuotaConsumption(): Promise<MessageQuotaConsumption>;
   getFollowerIds(start?: string): Promise<{ userIds: string[]; next?: string }>;
   getNumberOfFollowers(date: string): Promise<InsightFollowers>;
-  getFriendDemographics(): Promise<unknown>;
+  getFriendDemographics(): Promise<FriendDemographics>;
 }
 
 export class LineMessagingClient implements LineService {
@@ -355,7 +367,7 @@ export class LineMessagingClient implements LineService {
     await this.client.leaveRoom(roomId);
   }
 
-  async createRichMenu(richMenu: object): Promise<{ richMenuId: string }> {
+  async createRichMenu(richMenu: Record<string, unknown>): Promise<{ richMenuId: string }> {
     const result = await this.client.createRichMenu(richMenu as any);
     return { richMenuId: result.richMenuId };
   }
@@ -440,7 +452,7 @@ export class LineMessagingClient implements LineService {
     };
   }
 
-  async getFriendDemographics(): Promise<unknown> {
+  async getFriendDemographics(): Promise<FriendDemographics> {
     return await this.insightClient.getFriendsDemographics();
   }
 

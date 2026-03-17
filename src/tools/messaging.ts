@@ -2,6 +2,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
 import type { LineService } from '../services/line.js';
 import { formatLineError } from '../utils/error.js';
+import { parseFlexContainer } from '../utils/flex.js';
 
 const targetId = z
   .string()
@@ -134,38 +135,16 @@ export function registerMessagingTools(
       }),
     },
     async ({ to, altText, contents }) => {
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(contents);
-      } catch {
+      const result = parseFlexContainer(contents);
+      if (!result.ok) {
         return {
-          content: [
-            { type: 'text', text: 'Invalid Flex container: contents is not valid JSON' },
-          ],
-          isError: true,
-        };
-      }
-
-      if (
-        typeof parsed !== 'object' ||
-        parsed === null ||
-        Array.isArray(parsed) ||
-        ((parsed as Record<string, unknown>).type !== 'bubble' &&
-          (parsed as Record<string, unknown>).type !== 'carousel')
-      ) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: 'Invalid Flex container: must be a JSON object with "type" set to "bubble" or "carousel"',
-            },
-          ],
+          content: [{ type: 'text', text: result.error }],
           isError: true,
         };
       }
 
       try {
-        await lineService.pushFlexMessage(to, altText, parsed as any);
+        await lineService.pushFlexMessage(to, altText, result.container);
         return {
           content: [{ type: 'text', text: `Flex message sent to ${to}` }],
         };
@@ -392,38 +371,16 @@ export function registerMessagingTools(
       }),
     },
     async ({ altText, contents }) => {
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(contents);
-      } catch {
+      const result = parseFlexContainer(contents);
+      if (!result.ok) {
         return {
-          content: [
-            { type: 'text', text: 'Invalid Flex container: contents is not valid JSON' },
-          ],
-          isError: true,
-        };
-      }
-
-      if (
-        typeof parsed !== 'object' ||
-        parsed === null ||
-        Array.isArray(parsed) ||
-        ((parsed as Record<string, unknown>).type !== 'bubble' &&
-          (parsed as Record<string, unknown>).type !== 'carousel')
-      ) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: 'Invalid Flex container: must be a JSON object with "type" set to "bubble" or "carousel"',
-            },
-          ],
+          content: [{ type: 'text', text: result.error }],
           isError: true,
         };
       }
 
       try {
-        await lineService.broadcastFlexMessage(altText, parsed as any);
+        await lineService.broadcastFlexMessage(altText, result.container);
         return {
           content: [{ type: 'text', text: 'Flex message broadcast to all followers' }],
         };
@@ -462,38 +419,16 @@ export function registerMessagingTools(
       }),
     },
     async ({ userIds, altText, contents }) => {
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(contents);
-      } catch {
+      const result = parseFlexContainer(contents);
+      if (!result.ok) {
         return {
-          content: [
-            { type: 'text', text: 'Invalid Flex container: contents is not valid JSON' },
-          ],
-          isError: true,
-        };
-      }
-
-      if (
-        typeof parsed !== 'object' ||
-        parsed === null ||
-        Array.isArray(parsed) ||
-        ((parsed as Record<string, unknown>).type !== 'bubble' &&
-          (parsed as Record<string, unknown>).type !== 'carousel')
-      ) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: 'Invalid Flex container: must be a JSON object with "type" set to "bubble" or "carousel"',
-            },
-          ],
+          content: [{ type: 'text', text: result.error }],
           isError: true,
         };
       }
 
       try {
-        await lineService.multicastFlexMessage(userIds, altText, parsed as any);
+        await lineService.multicastFlexMessage(userIds, altText, result.container);
         return {
           content: [
             {
