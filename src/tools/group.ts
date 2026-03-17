@@ -121,6 +121,65 @@ export function registerGroupTools(
   );
 
   server.registerTool(
+    'get_room_member_ids',
+    {
+      title: 'Get Room Member IDs',
+      description:
+        'Get the user IDs of all members in a LINE multi-person chat room. The bot must be a member of the room.',
+      inputSchema: z.object({
+        roomId: z.string().min(1).describe('LINE Room ID (starts with "R")'),
+      }),
+    },
+    async ({ roomId }) => {
+      try {
+        const memberIds = await lineService.getRoomMemberIds(roomId);
+        return {
+          content: [
+            { type: 'text', text: JSON.stringify(memberIds, null, 2) },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            { type: 'text', text: `Failed to get room member IDs: ${formatLineError(error)}` },
+          ],
+          isError: true,
+        };
+      }
+    },
+  );
+
+  server.registerTool(
+    'get_room_member_profile',
+    {
+      title: 'Get Room Member Profile',
+      description:
+        "Get a member's profile in a LINE multi-person chat room. The bot must be a member of the room.",
+      inputSchema: z.object({
+        roomId: z.string().min(1).describe('LINE Room ID (starts with "R")'),
+        userId: z.string().min(1).describe('LINE User ID (starts with "U")'),
+      }),
+    },
+    async ({ roomId, userId }) => {
+      try {
+        const profile = await lineService.getRoomMemberProfile(roomId, userId);
+        return {
+          content: [
+            { type: 'text', text: JSON.stringify(profile, null, 2) },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            { type: 'text', text: `Failed to get room member profile: ${formatLineError(error)}` },
+          ],
+          isError: true,
+        };
+      }
+    },
+  );
+
+  server.registerTool(
     'get_room_member_count',
     {
       title: 'Get Room Member Count',

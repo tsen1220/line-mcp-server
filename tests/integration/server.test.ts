@@ -65,6 +65,8 @@ const TOOL_CALLS: Record<string, Record<string, unknown>> = {
   get_group_member_profile: { groupId: 'C001', userId: 'U001' },
   leave_group: { groupId: 'C001' },
   get_room_member_count: { roomId: 'R001' },
+  get_room_member_ids: { roomId: 'R001' },
+  get_room_member_profile: { roomId: 'R001', userId: 'U001' },
   leave_room: { roomId: 'R001' },
 
   // Rich Menu
@@ -93,6 +95,13 @@ const TOOL_CALLS: Record<string, Record<string, unknown>> = {
   get_follower_ids: {},
   get_number_of_followers: { date: '20240101' },
   get_friend_demographics: {},
+  get_sent_reply_count: { date: '20240101' },
+  get_sent_push_count: { date: '20240101' },
+  get_sent_multicast_count: { date: '20240101' },
+  get_sent_broadcast_count: { date: '20240101' },
+  get_message_deliveries: { date: '20240101' },
+  get_message_event: { requestId: 'req-001' },
+  get_statistics_per_unit: { customAggregationUnit: 'promotion_a', from: '20240101', to: '20240131' },
 };
 
 describe('MCP Server Integration', () => {
