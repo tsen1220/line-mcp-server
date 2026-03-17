@@ -54,8 +54,35 @@ export interface LineService {
     altText: string,
     contents: FlexContainer,
   ): Promise<void>;
+  pushVideoMessage(
+    to: string,
+    originalContentUrl: string,
+    previewImageUrl: string,
+  ): Promise<void>;
+  pushAudioMessage(
+    to: string,
+    originalContentUrl: string,
+    duration: number,
+  ): Promise<void>;
+  pushLocationMessage(
+    to: string,
+    title: string,
+    address: string,
+    latitude: number,
+    longitude: number,
+  ): Promise<void>;
   broadcastTextMessage(text: string): Promise<void>;
+  broadcastFlexMessage(
+    altText: string,
+    contents: FlexContainer,
+  ): Promise<void>;
   multicastTextMessage(userIds: string[], text: string): Promise<void>;
+  multicastFlexMessage(
+    userIds: string[],
+    altText: string,
+    contents: FlexContainer,
+  ): Promise<void>;
+  showLoadingIndicator(chatId: string): Promise<void>;
   getUserProfile(userId: string): Promise<UserProfile>;
   getGroupSummary(groupId: string): Promise<GroupSummary>;
 }
@@ -113,6 +140,41 @@ export class LineMessagingClient implements LineService {
     });
   }
 
+  async pushVideoMessage(
+    to: string,
+    originalContentUrl: string,
+    previewImageUrl: string,
+  ): Promise<void> {
+    await this.client.pushMessage({
+      to,
+      messages: [{ type: 'video', originalContentUrl, previewImageUrl }],
+    });
+  }
+
+  async pushAudioMessage(
+    to: string,
+    originalContentUrl: string,
+    duration: number,
+  ): Promise<void> {
+    await this.client.pushMessage({
+      to,
+      messages: [{ type: 'audio', originalContentUrl, duration }],
+    });
+  }
+
+  async pushLocationMessage(
+    to: string,
+    title: string,
+    address: string,
+    latitude: number,
+    longitude: number,
+  ): Promise<void> {
+    await this.client.pushMessage({
+      to,
+      messages: [{ type: 'location', title, address, latitude, longitude }],
+    });
+  }
+
   async broadcastTextMessage(text: string): Promise<void> {
     await this.client.broadcast({
       messages: [{ type: 'text', text }],
@@ -124,6 +186,42 @@ export class LineMessagingClient implements LineService {
       to: userIds,
       messages: [{ type: 'text', text }],
     });
+  }
+
+  async broadcastFlexMessage(
+    altText: string,
+    contents: FlexContainer,
+  ): Promise<void> {
+    await this.client.broadcast({
+      messages: [
+        {
+          type: 'flex',
+          altText,
+          contents: contents as messagingApi.FlexContainer,
+        },
+      ],
+    });
+  }
+
+  async multicastFlexMessage(
+    userIds: string[],
+    altText: string,
+    contents: FlexContainer,
+  ): Promise<void> {
+    await this.client.multicast({
+      to: userIds,
+      messages: [
+        {
+          type: 'flex',
+          altText,
+          contents: contents as messagingApi.FlexContainer,
+        },
+      ],
+    });
+  }
+
+  async showLoadingIndicator(chatId: string): Promise<void> {
+    await this.client.showLoadingAnimation({ chatId });
   }
 
   async getUserProfile(userId: string): Promise<UserProfile> {

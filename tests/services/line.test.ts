@@ -5,6 +5,7 @@ const mockBroadcast = vi.fn().mockResolvedValue({});
 const mockMulticast = vi.fn().mockResolvedValue({});
 const mockGetProfile = vi.fn();
 const mockGetGroupSummary = vi.fn();
+const mockShowLoadingAnimation = vi.fn().mockResolvedValue({});
 vi.mock('@line/bot-sdk', () => ({
   messagingApi: {
     MessagingApiClient: class {
@@ -13,6 +14,7 @@ vi.mock('@line/bot-sdk', () => ({
       multicast = mockMulticast;
       getProfile = mockGetProfile;
       getGroupSummary = mockGetGroupSummary;
+      showLoadingAnimation = mockShowLoadingAnimation;
     },
   },
 }));
@@ -166,6 +168,89 @@ describe('LineMessagingClient', () => {
     it('propagates SDK errors', async () => {
       mockGetGroupSummary.mockRejectedValue(new Error('forbidden'));
       await expect(service.getGroupSummary('C456')).rejects.toThrow('forbidden');
+    });
+  });
+
+  describe('pushVideoMessage', () => {
+    it('calls pushMessage with video', async () => {
+      await service.pushVideoMessage('U123', 'https://vid.com/a.mp4', 'https://img.com/p.jpg');
+      expect(mockPushMessage).toHaveBeenCalledWith({
+        to: 'U123',
+        messages: [
+          {
+            type: 'video',
+            originalContentUrl: 'https://vid.com/a.mp4',
+            previewImageUrl: 'https://img.com/p.jpg',
+          },
+        ],
+      });
+    });
+  });
+
+  describe('pushAudioMessage', () => {
+    it('calls pushMessage with audio', async () => {
+      await service.pushAudioMessage('U123', 'https://audio.com/a.m4a', 60000);
+      expect(mockPushMessage).toHaveBeenCalledWith({
+        to: 'U123',
+        messages: [
+          {
+            type: 'audio',
+            originalContentUrl: 'https://audio.com/a.m4a',
+            duration: 60000,
+          },
+        ],
+      });
+    });
+  });
+
+  describe('pushLocationMessage', () => {
+    it('calls pushMessage with location', async () => {
+      await service.pushLocationMessage('U123', 'Office', '123 Main St', 35.6895, 139.6917);
+      expect(mockPushMessage).toHaveBeenCalledWith({
+        to: 'U123',
+        messages: [
+          {
+            type: 'location',
+            title: 'Office',
+            address: '123 Main St',
+            latitude: 35.6895,
+            longitude: 139.6917,
+          },
+        ],
+      });
+    });
+  });
+
+  describe('broadcastFlexMessage', () => {
+    it('calls broadcast with flex container', async () => {
+      const contents = { type: 'bubble' as const, body: { type: 'box' } };
+      await service.broadcastFlexMessage('alt text', contents);
+      expect(mockBroadcast).toHaveBeenCalledWith({
+        messages: [{ type: 'flex', altText: 'alt text', contents }],
+      });
+    });
+  });
+
+  describe('multicastFlexMessage', () => {
+    it('calls multicast with flex container', async () => {
+      const contents = { type: 'carousel' as const, contents: [] };
+      await service.multicastFlexMessage(['U001', 'U002'], 'alt text', contents);
+      expect(mockMulticast).toHaveBeenCalledWith({
+        to: ['U001', 'U002'],
+        messages: [{ type: 'flex', altText: 'alt text', contents }],
+      });
+    });
+  });
+
+  describe('showLoadingIndicator', () => {
+    it('calls showLoadingAnimation with chatId', async () => {
+      await service.showLoadingIndicator('U123');
+      expect(mockShowLoadingAnimation).toHaveBeenCalledWith({ chatId: 'U123' });
+    });
+
+    it('propagates SDK errors', async () => {
+      mockShowLoadingAnimation.mockRejectedValue(new Error('loading failed'));
+      await expect(service.showLoadingIndicator('U123')).rejects.toThrow('loading failed');
     });
   });
 

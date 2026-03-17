@@ -10,8 +10,14 @@ function createMockLineService(): LineService {
     pushImageMessage: vi.fn().mockResolvedValue(undefined),
     pushStickerMessage: vi.fn().mockResolvedValue(undefined),
     pushFlexMessage: vi.fn().mockResolvedValue(undefined),
+    pushVideoMessage: vi.fn().mockResolvedValue(undefined),
+    pushAudioMessage: vi.fn().mockResolvedValue(undefined),
+    pushLocationMessage: vi.fn().mockResolvedValue(undefined),
     broadcastTextMessage: vi.fn().mockResolvedValue(undefined),
+    broadcastFlexMessage: vi.fn().mockResolvedValue(undefined),
     multicastTextMessage: vi.fn().mockResolvedValue(undefined),
+    multicastFlexMessage: vi.fn().mockResolvedValue(undefined),
+    showLoadingIndicator: vi.fn().mockResolvedValue(undefined),
     getUserProfile: vi.fn(),
     getGroupSummary: vi.fn(),
   };
@@ -37,8 +43,8 @@ describe('messaging tools', () => {
     ({ handlers } = registerAndCapture(lineService));
   });
 
-  it('registers 6 tools', () => {
-    expect(handlers.size).toBe(6);
+  it('registers 12 tools', () => {
+    expect(handlers.size).toBe(12);
   });
 
   describe('push_text_message', () => {
@@ -213,6 +219,206 @@ describe('messaging tools', () => {
       const result: any = await handlers.get('multicast_text_message')!({
         userIds: ['U001'],
         text: 'Hi',
+      });
+      expect(result.isError).toBe(true);
+    });
+  });
+
+  describe('push_video_message', () => {
+    it('sends video and returns success', async () => {
+      const result: any = await handlers.get('push_video_message')!({
+        to: 'U123',
+        originalContentUrl: 'https://vid.com/a.mp4',
+        previewImageUrl: 'https://img.com/p.jpg',
+      });
+      expect(lineService.pushVideoMessage).toHaveBeenCalledWith(
+        'U123',
+        'https://vid.com/a.mp4',
+        'https://img.com/p.jpg',
+      );
+      expect(result.content[0].text).toContain('U123');
+      expect(result.isError).toBeUndefined();
+    });
+
+    it('returns error on failure', async () => {
+      vi.mocked(lineService.pushVideoMessage).mockRejectedValue(new Error('fail'));
+      const result: any = await handlers.get('push_video_message')!({
+        to: 'U123',
+        originalContentUrl: 'https://vid.com/a.mp4',
+        previewImageUrl: 'https://img.com/p.jpg',
+      });
+      expect(result.isError).toBe(true);
+    });
+  });
+
+  describe('push_audio_message', () => {
+    it('sends audio and returns success', async () => {
+      const result: any = await handlers.get('push_audio_message')!({
+        to: 'U123',
+        originalContentUrl: 'https://audio.com/a.m4a',
+        duration: 60000,
+      });
+      expect(lineService.pushAudioMessage).toHaveBeenCalledWith(
+        'U123',
+        'https://audio.com/a.m4a',
+        60000,
+      );
+      expect(result.content[0].text).toContain('U123');
+      expect(result.isError).toBeUndefined();
+    });
+
+    it('returns error on failure', async () => {
+      vi.mocked(lineService.pushAudioMessage).mockRejectedValue(new Error('fail'));
+      const result: any = await handlers.get('push_audio_message')!({
+        to: 'U123',
+        originalContentUrl: 'https://audio.com/a.m4a',
+        duration: 60000,
+      });
+      expect(result.isError).toBe(true);
+    });
+  });
+
+  describe('push_location_message', () => {
+    it('sends location and returns success', async () => {
+      const result: any = await handlers.get('push_location_message')!({
+        to: 'U123',
+        title: 'Office',
+        address: '123 Main St',
+        latitude: 35.6895,
+        longitude: 139.6917,
+      });
+      expect(lineService.pushLocationMessage).toHaveBeenCalledWith(
+        'U123',
+        'Office',
+        '123 Main St',
+        35.6895,
+        139.6917,
+      );
+      expect(result.content[0].text).toContain('U123');
+      expect(result.isError).toBeUndefined();
+    });
+
+    it('returns error on failure', async () => {
+      vi.mocked(lineService.pushLocationMessage).mockRejectedValue(new Error('fail'));
+      const result: any = await handlers.get('push_location_message')!({
+        to: 'U123',
+        title: 'Office',
+        address: '123 Main St',
+        latitude: 35.6895,
+        longitude: 139.6917,
+      });
+      expect(result.isError).toBe(true);
+    });
+  });
+
+  describe('show_loading_indicator', () => {
+    it('shows loading and returns success', async () => {
+      const result: any = await handlers.get('show_loading_indicator')!({
+        chatId: 'U123',
+      });
+      expect(lineService.showLoadingIndicator).toHaveBeenCalledWith('U123');
+      expect(result.content[0].text).toContain('U123');
+      expect(result.isError).toBeUndefined();
+    });
+
+    it('returns error on failure', async () => {
+      vi.mocked(lineService.showLoadingIndicator).mockRejectedValue(new Error('fail'));
+      const result: any = await handlers.get('show_loading_indicator')!({
+        chatId: 'U123',
+      });
+      expect(result.isError).toBe(true);
+    });
+  });
+
+  describe('broadcast_flex_message', () => {
+    const validFlex = JSON.stringify({ type: 'bubble', body: { type: 'box' } });
+
+    it('broadcasts valid flex message', async () => {
+      const result: any = await handlers.get('broadcast_flex_message')!({
+        altText: 'hello',
+        contents: validFlex,
+      });
+      expect(lineService.broadcastFlexMessage).toHaveBeenCalledWith(
+        'hello',
+        { type: 'bubble', body: { type: 'box' } },
+      );
+      expect(result.isError).toBeUndefined();
+    });
+
+    it('returns error for invalid JSON', async () => {
+      const result: any = await handlers.get('broadcast_flex_message')!({
+        altText: 'hello',
+        contents: 'not json{{{',
+      });
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('not valid JSON');
+      expect(lineService.broadcastFlexMessage).not.toHaveBeenCalled();
+    });
+
+    it('returns error for invalid flex type', async () => {
+      const result: any = await handlers.get('broadcast_flex_message')!({
+        altText: 'hello',
+        contents: '{"type": "invalid"}',
+      });
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Invalid Flex container');
+    });
+
+    it('returns error on LINE API failure', async () => {
+      vi.mocked(lineService.broadcastFlexMessage).mockRejectedValue(new Error('fail'));
+      const result: any = await handlers.get('broadcast_flex_message')!({
+        altText: 'hello',
+        contents: validFlex,
+      });
+      expect(result.isError).toBe(true);
+    });
+  });
+
+  describe('multicast_flex_message', () => {
+    const validFlex = JSON.stringify({ type: 'carousel', contents: [] });
+
+    it('multicasts valid flex message', async () => {
+      const result: any = await handlers.get('multicast_flex_message')!({
+        userIds: ['U001', 'U002'],
+        altText: 'hello',
+        contents: validFlex,
+      });
+      expect(lineService.multicastFlexMessage).toHaveBeenCalledWith(
+        ['U001', 'U002'],
+        'hello',
+        { type: 'carousel', contents: [] },
+      );
+      expect(result.content[0].text).toContain('2 users');
+      expect(result.isError).toBeUndefined();
+    });
+
+    it('returns error for invalid JSON', async () => {
+      const result: any = await handlers.get('multicast_flex_message')!({
+        userIds: ['U001'],
+        altText: 'hello',
+        contents: 'bad json',
+      });
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('not valid JSON');
+      expect(lineService.multicastFlexMessage).not.toHaveBeenCalled();
+    });
+
+    it('returns error for invalid flex type', async () => {
+      const result: any = await handlers.get('multicast_flex_message')!({
+        userIds: ['U001'],
+        altText: 'hello',
+        contents: '[]',
+      });
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Invalid Flex container');
+    });
+
+    it('returns error on LINE API failure', async () => {
+      vi.mocked(lineService.multicastFlexMessage).mockRejectedValue(new Error('fail'));
+      const result: any = await handlers.get('multicast_flex_message')!({
+        userIds: ['U001'],
+        altText: 'hello',
+        contents: validFlex,
       });
       expect(result.isError).toBe(true);
     });
