@@ -21,6 +21,12 @@ const mockGetDefaultRichMenuId = vi.fn();
 const mockCancelDefaultRichMenu = vi.fn().mockResolvedValue({});
 const mockLinkRichMenuIdToUser = vi.fn().mockResolvedValue({});
 const mockUnlinkRichMenuIdFromUser = vi.fn().mockResolvedValue({});
+const mockGetBotInfo = vi.fn();
+const mockGetMessageQuota = vi.fn();
+const mockGetMessageQuotaConsumption = vi.fn();
+const mockGetFollowers = vi.fn();
+const mockGetNumberOfFollowers = vi.fn();
+const mockGetFriendsDemographics = vi.fn();
 vi.mock('@line/bot-sdk', () => ({
   messagingApi: {
     MessagingApiClient: class {
@@ -45,6 +51,16 @@ vi.mock('@line/bot-sdk', () => ({
       cancelDefaultRichMenu = mockCancelDefaultRichMenu;
       linkRichMenuIdToUser = mockLinkRichMenuIdToUser;
       unlinkRichMenuIdFromUser = mockUnlinkRichMenuIdFromUser;
+      getBotInfo = mockGetBotInfo;
+      getMessageQuota = mockGetMessageQuota;
+      getMessageQuotaConsumption = mockGetMessageQuotaConsumption;
+      getFollowers = mockGetFollowers;
+    },
+  },
+  insight: {
+    InsightClient: class {
+      getNumberOfFollowers = mockGetNumberOfFollowers;
+      getFriendsDemographics = mockGetFriendsDemographics;
     },
   },
 }));
@@ -360,6 +376,46 @@ describe('LineMessagingClient', () => {
         displayName: 'Bob',
         userId: 'U456',
         pictureUrl: undefined,
+  describe('getBotInfo', () => {
+    it('returns mapped bot info', async () => {
+      mockGetBotInfo.mockResolvedValue({
+        userId: 'U001',
+        basicId: '@bot',
+        premiumId: '@premium',
+        displayName: 'Test Bot',
+        pictureUrl: 'https://pic.com/bot.jpg',
+        chatMode: 'bot',
+        markAsReadMode: 'auto',
+      });
+      const info = await service.getBotInfo();
+      expect(info).toEqual({
+        userId: 'U001',
+        basicId: '@bot',
+        premiumId: '@premium',
+        displayName: 'Test Bot',
+        pictureUrl: 'https://pic.com/bot.jpg',
+        chatMode: 'bot',
+        markAsReadMode: 'auto',
+      });
+    });
+
+    it('handles bot info without optional fields', async () => {
+      mockGetBotInfo.mockResolvedValue({
+        userId: 'U001',
+        basicId: '@bot',
+        displayName: 'Test Bot',
+        chatMode: 'chat',
+        markAsReadMode: 'manual',
+      });
+      const info = await service.getBotInfo();
+      expect(info).toEqual({
+        userId: 'U001',
+        basicId: '@bot',
+        premiumId: undefined,
+        displayName: 'Test Bot',
+        pictureUrl: undefined,
+        chatMode: 'chat',
+        markAsReadMode: 'manual',
       });
     });
 
@@ -517,6 +573,126 @@ describe('LineMessagingClient', () => {
     it('propagates SDK errors', async () => {
       mockUnlinkRichMenuIdFromUser.mockRejectedValue(new Error('unlink failed'));
       await expect(service.unlinkRichMenuFromUser('U123')).rejects.toThrow('unlink failed');
+      mockGetBotInfo.mockRejectedValue(new Error('unauthorized'));
+      await expect(service.getBotInfo()).rejects.toThrow('unauthorized');
+    });
+  });
+
+  describe('getMessageQuota', () => {
+    it('returns mapped quota', async () => {
+      mockGetMessageQuota.mockResolvedValue({
+        type: 'limited',
+        value: 1000,
+      });
+      const quota = await service.getMessageQuota();
+      expect(quota).toEqual({ type: 'limited', value: 1000 });
+    });
+
+    it('handles quota without value', async () => {
+      mockGetMessageQuota.mockResolvedValue({
+        type: 'none',
+      });
+      const quota = await service.getMessageQuota();
+      expect(quota).toEqual({ type: 'none', value: undefined });
+    });
+
+    it('propagates SDK errors', async () => {
+      mockGetMessageQuota.mockRejectedValue(new Error('fail'));
+      await expect(service.getMessageQuota()).rejects.toThrow('fail');
+    });
+  });
+
+  describe('getMessageQuotaConsumption', () => {
+    it('returns mapped consumption', async () => {
+      mockGetMessageQuotaConsumption.mockResolvedValue({
+        totalUsage: 500,
+      });
+      const consumption = await service.getMessageQuotaConsumption();
+      expect(consumption).toEqual({ totalUsage: 500 });
+    });
+
+    it('propagates SDK errors', async () => {
+      mockGetMessageQuotaConsumption.mockRejectedValue(new Error('fail'));
+      await expect(service.getMessageQuotaConsumption()).rejects.toThrow('fail');
+    });
+  });
+
+  describe('getFollowerIds', () => {
+    it('returns follower IDs with next token', async () => {
+      mockGetFollowers.mockResolvedValue({
+        userIds: ['U001', 'U002'],
+        next: 'token123',
+      });
+      const result = await service.getFollowerIds();
+      expect(result).toEqual({
+        userIds: ['U001', 'U002'],
+        next: 'token123',
+      });
+      expect(mockGetFollowers).toHaveBeenCalledWith(undefined);
+    });
+
+    it('passes start token for pagination', async () => {
+      mockGetFollowers.mockResolvedValue({
+        userIds: ['U003'],
+      });
+      const result = await service.getFollowerIds('token123');
+      expect(result).toEqual({
+        userIds: ['U003'],
+        next: undefined,
+      });
+      expect(mockGetFollowers).toHaveBeenCalledWith('token123');
+    });
+
+    it('propagates SDK errors', async () => {
+      mockGetFollowers.mockRejectedValue(new Error('fail'));
+      await expect(service.getFollowerIds()).rejects.toThrow('fail');
+    });
+  });
+
+  describe('getNumberOfFollowers', () => {
+    it('returns mapped follower stats', async () => {
+      mockGetNumberOfFollowers.mockResolvedValue({
+        status: 'ready',
+        followers: 1000,
+        targetedReaches: 800,
+        blocks: 50,
+      });
+      const result = await service.getNumberOfFollowers('20240101');
+      expect(result).toEqual({
+        status: 'ready',
+        followers: 1000,
+        targetedReaches: 800,
+        blocks: 50,
+      });
+      expect(mockGetNumberOfFollowers).toHaveBeenCalledWith('20240101');
+    });
+
+    it('defaults status to unready when undefined', async () => {
+      mockGetNumberOfFollowers.mockResolvedValue({});
+      const result = await service.getNumberOfFollowers('20240101');
+      expect(result.status).toBe('unready');
+    });
+
+    it('propagates SDK errors', async () => {
+      mockGetNumberOfFollowers.mockRejectedValue(new Error('fail'));
+      await expect(service.getNumberOfFollowers('20240101')).rejects.toThrow('fail');
+    });
+  });
+
+  describe('getFriendDemographics', () => {
+    it('returns raw demographics response', async () => {
+      const demographics = {
+        available: true,
+        genders: [{ gender: 'male', percentage: 60 }],
+      };
+      mockGetFriendsDemographics.mockResolvedValue(demographics);
+      const result = await service.getFriendDemographics();
+      expect(result).toEqual(demographics);
+    });
+
+    it('propagates SDK errors', async () => {
+      mockGetFriendsDemographics.mockRejectedValue(new Error('fail'));
+      await expect(service.getFriendDemographics()).rejects.toThrow('fail');
     });
   });
 

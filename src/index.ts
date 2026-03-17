@@ -7,6 +7,7 @@ import { registerMessagingTools } from './tools/messaging.js';
 import { registerProfileTools } from './tools/profile.js';
 import { registerGroupTools } from './tools/group.js';
 import { registerRichMenuTools } from './tools/richmenu.js';
+import { registerInsightTools } from './tools/insight.js';
 
 const channelAccessToken = process.env.CHANNEL_ACCESS_TOKEN;
 
@@ -29,6 +30,7 @@ registerMessagingTools(server, lineService);
 registerProfileTools(server, lineService);
 registerGroupTools(server, lineService);
 registerRichMenuTools(server, lineService);
+registerInsightTools(server, lineService);
 
 const transport = new StdioServerTransport();
 try {
