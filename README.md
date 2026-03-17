@@ -28,7 +28,7 @@ MCP Server for LINE Messaging API — let AI agents send messages, manage groups
 | `get_user_profile` | Get user display name, picture, status, and language |
 | `get_group_summary` | Get group name and picture (bot must be a member of the group) |
 
-### Group & Room Management (6 tools)
+### Group & Room Management (8 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -37,9 +37,9 @@ MCP Server for LINE Messaging API — let AI agents send messages, manage groups
 | `get_group_member_profile` | Get a specific member's profile within a group |
 | `leave_group` | Bot leaves a group (permanent) |
 | `get_room_member_count` | Get number of members in a room |
+| `get_room_member_ids` | List all member IDs in a room |
+| `get_room_member_profile` | Get a specific member's profile within a room |
 | `leave_room` | Bot leaves a room (permanent) |
-
-> **Note:** Room tools are limited compared to group tools. There is no `get_room_member_ids` or `get_room_member_profile` — this is a LINE API limitation.
 
 ### Rich Menu (9 tools)
 
@@ -55,7 +55,7 @@ MCP Server for LINE Messaging API — let AI agents send messages, manage groups
 | `link_rich_menu_to_user` | Assign a rich menu to a specific user |
 | `unlink_rich_menu_from_user` | Remove a user's assigned rich menu |
 
-### Insight & Analytics (6 tools)
+### Insight & Analytics (13 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -65,6 +65,13 @@ MCP Server for LINE Messaging API — let AI agents send messages, manage groups
 | `get_follower_ids` | List follower user IDs (paginated) |
 | `get_number_of_followers` | Get follower count statistics for a date (yyyyMMdd, UTC+9) |
 | `get_friend_demographics` | Get follower demographic data (age, gender, area) |
+| `get_sent_reply_count` | Get number of sent reply messages for a date (yyyyMMdd, UTC+9) |
+| `get_sent_push_count` | Get number of sent push messages for a date (yyyyMMdd, UTC+9) |
+| `get_sent_multicast_count` | Get number of sent multicast messages for a date (yyyyMMdd, UTC+9) |
+| `get_sent_broadcast_count` | Get number of sent broadcast messages for a date (yyyyMMdd, UTC+9) |
+| `get_message_deliveries` | Get number of message deliveries for a date (yyyyMMdd, UTC+9) |
+| `get_message_event` | Get message event statistics by request ID |
+| `get_statistics_per_unit` | Get statistics for a custom aggregation unit within a date range |
 
 ## Prerequisites
 
@@ -155,9 +162,9 @@ src/
 ├── tools/
 │   ├── messaging.ts                  # 12 messaging tools
 │   ├── profile.ts                    # 2 profile tools
-│   ├── group.ts                      # 6 group/room management tools
+│   ├── group.ts                      # 8 group/room management tools
 │   ├── richmenu.ts                   # 9 rich menu tools
-│   └── insight.ts                    # 6 insight/analytics tools
+│   └── insight.ts                    # 13 insight/analytics tools
 └── utils/
     ├── error.ts                      # Error formatting utility
     └── flex.ts                       # Flex message JSON validation
@@ -166,7 +173,7 @@ tests/
 ├── helpers/
 │   └── mock-line-service.ts          # Shared mock LineService for all tests
 ├── integration/
-│   └── server.test.ts                # MCP server integration test (all 35 tools)
+│   └── server.test.ts                # MCP server integration test (all 44 tools)
 ├── services/
 │   └── line.test.ts                  # LineMessagingClient unit tests
 ├── tools/
