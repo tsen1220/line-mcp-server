@@ -1,36 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { LineService } from '../../src/services/line.js';
 import { registerProfileTools } from '../../src/tools/profile.js';
+import { createMockLineService } from '../helpers/mock-line-service.js';
 
 type ToolHandler = (args: Record<string, unknown>) => Promise<unknown>;
-
-function createMockLineService(): LineService {
-  return {
-    pushTextMessage: vi.fn(),
-    pushImageMessage: vi.fn(),
-    pushStickerMessage: vi.fn(),
-    pushFlexMessage: vi.fn(),
-    broadcastTextMessage: vi.fn(),
-    multicastTextMessage: vi.fn(),
-    getUserProfile: vi.fn(),
-    getGroupSummary: vi.fn(),
-    getGroupMemberCount: vi.fn(),
-    getGroupMemberIds: vi.fn(),
-    getGroupMemberProfile: vi.fn(),
-    leaveGroup: vi.fn(),
-    getRoomMemberCount: vi.fn(),
-    leaveRoom: vi.fn(),
-    createRichMenu: vi.fn(),
-    getRichMenuList: vi.fn(),
-    getRichMenu: vi.fn(),
-    deleteRichMenu: vi.fn(),
-    setDefaultRichMenu: vi.fn(),
-    getDefaultRichMenuId: vi.fn(),
-    cancelDefaultRichMenu: vi.fn(),
-    linkRichMenuToUser: vi.fn(),
-    unlinkRichMenuFromUser: vi.fn(),
-  };
-}
 
 function registerAndCapture(lineService: LineService) {
   const handlers = new Map<string, ToolHandler>();

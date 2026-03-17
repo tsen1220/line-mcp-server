@@ -1,27 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { LineService } from '../../src/services/line.js';
 import { registerInsightTools } from '../../src/tools/insight.js';
+import { createMockLineService } from '../helpers/mock-line-service.js';
 
 type ToolHandler = (args: Record<string, unknown>) => Promise<unknown>;
-
-function createMockLineService(): LineService {
-  return {
-    pushTextMessage: vi.fn(),
-    pushImageMessage: vi.fn(),
-    pushStickerMessage: vi.fn(),
-    pushFlexMessage: vi.fn(),
-    broadcastTextMessage: vi.fn(),
-    multicastTextMessage: vi.fn(),
-    getUserProfile: vi.fn(),
-    getGroupSummary: vi.fn(),
-    getBotInfo: vi.fn(),
-    getMessageQuota: vi.fn(),
-    getMessageQuotaConsumption: vi.fn(),
-    getFollowerIds: vi.fn(),
-    getNumberOfFollowers: vi.fn(),
-    getFriendDemographics: vi.fn(),
-  };
-}
 
 function registerAndCapture(lineService: LineService) {
   const handlers = new Map<string, ToolHandler>();

@@ -1,42 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { LineService } from '../../src/services/line.js';
 import { registerMessagingTools } from '../../src/tools/messaging.js';
+import { createMockLineService } from '../helpers/mock-line-service.js';
 
 type ToolHandler = (args: Record<string, unknown>) => Promise<unknown>;
-
-function createMockLineService(): LineService {
-  return {
-    pushTextMessage: vi.fn().mockResolvedValue(undefined),
-    pushImageMessage: vi.fn().mockResolvedValue(undefined),
-    pushStickerMessage: vi.fn().mockResolvedValue(undefined),
-    pushFlexMessage: vi.fn().mockResolvedValue(undefined),
-    pushVideoMessage: vi.fn().mockResolvedValue(undefined),
-    pushAudioMessage: vi.fn().mockResolvedValue(undefined),
-    pushLocationMessage: vi.fn().mockResolvedValue(undefined),
-    broadcastTextMessage: vi.fn().mockResolvedValue(undefined),
-    broadcastFlexMessage: vi.fn().mockResolvedValue(undefined),
-    multicastTextMessage: vi.fn().mockResolvedValue(undefined),
-    multicastFlexMessage: vi.fn().mockResolvedValue(undefined),
-    showLoadingIndicator: vi.fn().mockResolvedValue(undefined),
-    getUserProfile: vi.fn(),
-    getGroupSummary: vi.fn(),
-    getGroupMemberCount: vi.fn(),
-    getGroupMemberIds: vi.fn(),
-    getGroupMemberProfile: vi.fn(),
-    leaveGroup: vi.fn(),
-    getRoomMemberCount: vi.fn(),
-    leaveRoom: vi.fn(),
-    createRichMenu: vi.fn(),
-    getRichMenuList: vi.fn(),
-    getRichMenu: vi.fn(),
-    deleteRichMenu: vi.fn(),
-    setDefaultRichMenu: vi.fn(),
-    getDefaultRichMenuId: vi.fn(),
-    cancelDefaultRichMenu: vi.fn(),
-    linkRichMenuToUser: vi.fn(),
-    unlinkRichMenuFromUser: vi.fn(),
-  };
-}
 
 function registerAndCapture(lineService: LineService) {
   const handlers = new Map<string, ToolHandler>();

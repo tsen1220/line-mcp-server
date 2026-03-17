@@ -122,8 +122,8 @@ export function registerInsightTools(
       inputSchema: z.object({
         date: z
           .string()
-          .min(1)
-          .describe('Date in yyyyMMdd format (e.g. 20240101). Timezone: UTC+9'),
+          .regex(/^\d{8}$/, 'Date must be in yyyyMMdd format')
+          .describe('Date in yyyyMMdd format (e.g. 20240101). Must be exactly 8 digits. Timezone: UTC+9'),
       }),
     },
     async ({ date }) => {
