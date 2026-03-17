@@ -12,32 +12,34 @@ MCP Server for LINE Messaging API — let AI agents send messages, manage groups
 | `push_image_message` | Send an image (HTTPS URLs only) |
 | `push_sticker_message` | Send a LINE sticker |
 | `push_flex_message` | Send a Flex Message (rich layout) |
-| `push_video_message` | Send a video |
-| `push_audio_message` | Send an audio clip |
+| `push_video_message` | Send a video (HTTPS URLs only) |
+| `push_audio_message` | Send an audio clip (HTTPS URLs only) |
 | `push_location_message` | Send a location (lat/lng) |
+| `show_loading_indicator` | Display a loading animation in a chat |
 | `broadcast_text_message` | Broadcast text to all followers |
-| `broadcast_flex_message` | Broadcast a Flex Message to all followers |
 | `multicast_text_message` | Send text to multiple users (max 500) |
+| `broadcast_flex_message` | Broadcast a Flex Message to all followers |
 | `multicast_flex_message` | Send a Flex Message to multiple users (max 500) |
-| `show_loading_indicator` | Display typing animation to a user |
 
 ### Profile (2 tools)
 
 | Tool | Description |
 |------|-------------|
 | `get_user_profile` | Get user display name, picture, status, and language |
-| `get_group_summary` | Get group name and picture |
+| `get_group_summary` | Get group name and picture (bot must be a member of the group) |
 
 ### Group & Room Management (6 tools)
 
 | Tool | Description |
 |------|-------------|
 | `get_group_member_count` | Get number of members in a group |
-| `get_group_member_ids` | List all member IDs in a group (with pagination) |
+| `get_group_member_ids` | List all member IDs in a group |
 | `get_group_member_profile` | Get a specific member's profile within a group |
 | `leave_group` | Bot leaves a group (permanent) |
 | `get_room_member_count` | Get number of members in a room |
 | `leave_room` | Bot leaves a room (permanent) |
+
+> **Note:** Room tools are limited compared to group tools. There is no `get_room_member_ids` or `get_room_member_profile` — this is a LINE API limitation.
 
 ### Rich Menu (9 tools)
 
@@ -57,12 +59,12 @@ MCP Server for LINE Messaging API — let AI agents send messages, manage groups
 
 | Tool | Description |
 |------|-------------|
-| `get_bot_info` | Get bot's display name, ID, chat mode |
+| `get_bot_info` | Get bot's display name, ID, chat mode, and mark-as-read mode |
 | `get_message_quota` | Get monthly message sending quota |
 | `get_message_quota_consumption` | Get messages sent this month |
 | `get_follower_ids` | List follower user IDs (paginated) |
-| `get_number_of_followers` | Get follower count statistics for a date |
-| `get_friend_demographics` | Get follower demographic data (age, gender, region) |
+| `get_number_of_followers` | Get follower count statistics for a date (yyyyMMdd, UTC+9) |
+| `get_friend_demographics` | Get follower demographic data (age, gender, area) |
 
 ## Prerequisites
 
@@ -80,15 +82,15 @@ MCP Server for LINE Messaging API — let AI agents send messages, manage groups
 6. In the **Basic settings** tab, find **Your user ID** (`U...`) — for testing push messages to yourself
 7. Go to the **Messaging API** tab, scroll to the bottom, and click **Issue** under **Channel access token (long-lived)** to generate your token
 
-### Enable Group Features (Optional)
+### Enable Group/Room Features (Optional)
 
-To use group/room tools or send messages to groups:
+To use group/room tools or send messages to groups and rooms:
 
 1. In [LINE Official Account Manager](https://manager.line.biz/) → **Settings** → **Account settings** → enable **Allow bot to join groups**
 2. In [LINE Official Account Manager](https://manager.line.biz/) → **Settings** → **Response settings** → enable **Webhook**
 3. In [LINE Developers Console](https://developers.line.biz/console/) → your Channel → **Messaging API** tab → set your **Webhook URL**
-4. Invite the bot to a group in the LINE app (search by the bot's **Basic ID** `@xxx` shown in LINE Developers Console → Basic settings)
-5. To get the Group ID (`C...`), receive the `join` event or any message event from the group via Webhook — it will contain `source.groupId`
+4. Invite the bot to a group or room in the LINE app (search by the bot's **Basic ID** `@xxx` shown in LINE Developers Console → Basic settings)
+5. To get the ID, receive the `join` event or any message event via Webhook — it will contain `source.groupId` (for groups) or `source.roomId` (for rooms)
 
 ## Setup
 
@@ -96,7 +98,7 @@ To use group/room tools or send messages to groups:
 git clone https://github.com/tsen1220/line-mcp-tools.git
 cd line-mcp-tools
 npm install
-npm run build
+npm run build   # compiles TypeScript to dist/
 ```
 
 ## Register in OpenClaw with mcporter
@@ -147,18 +149,41 @@ After registration, Claude can call LINE tools directly:
 
 ```
 src/
-├── index.ts                      # Entry point (stdio MCP server)
+├── index.ts                          # Entry point (stdio MCP server)
 ├── services/
-│   └── line.ts                   # LineService interface + LineMessagingClient
+│   └── line.ts                       # LineService interface + LineMessagingClient
 ├── tools/
-│   ├── messaging.ts              # 12 messaging tools
-│   ├── profile.ts                # 2 profile tools
-│   ├── group.ts                  # 6 group/room management tools
-│   ├── richmenu.ts               # 9 rich menu tools
-│   └── insight.ts                # 6 insight/analytics tools
+│   ├── messaging.ts                  # 12 messaging tools
+│   ├── profile.ts                    # 2 profile tools
+│   ├── group.ts                      # 6 group/room management tools
+│   ├── richmenu.ts                   # 9 rich menu tools
+│   └── insight.ts                    # 6 insight/analytics tools
 └── utils/
-    ├── error.ts                  # Error formatting utility
-    └── flex.ts                   # Flex message JSON validation
+    ├── error.ts                      # Error formatting utility
+    └── flex.ts                       # Flex message JSON validation
+
+tests/
+├── helpers/
+│   └── mock-line-service.ts          # Shared mock LineService for all tests
+├── integration/
+│   └── server.test.ts                # MCP server integration test (all 35 tools)
+├── services/
+│   └── line.test.ts                  # LineMessagingClient unit tests
+├── tools/
+│   ├── messaging.test.ts             # Messaging tool handler tests
+│   ├── profile.test.ts               # Profile tool handler tests
+│   ├── group.test.ts                 # Group/room tool handler tests
+│   ├── richmenu.test.ts              # Rich menu tool handler tests
+│   └── insight.test.ts               # Insight tool handler tests
+└── utils/
+    └── error.test.ts                 # Error formatting tests
+```
+
+## Testing
+
+```bash
+npm test              # run all tests
+npm run test:coverage # run with coverage report
 ```
 
 ## Environment Variables
