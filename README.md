@@ -1,5 +1,9 @@
 # line-mcp-server
 
+[![npm version](https://img.shields.io/npm/v/line-mcp-server.svg)](https://www.npmjs.com/package/line-mcp-server)
+[![Node.js](https://img.shields.io/node/v/line-mcp-server.svg)](https://nodejs.org)
+[![License: MIT](https://img.shields.io/npm/l/line-mcp-server.svg)](./LICENSE)
+
 MCP Server for LINE Messaging API — let AI agents send messages, manage groups, configure rich menus, and query analytics on LINE. Works with Claude Code, OpenClaw, and any MCP-compatible client.
 
 ## Features
