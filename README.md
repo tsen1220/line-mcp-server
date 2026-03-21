@@ -99,7 +99,47 @@ To use group/room tools or send messages to groups and rooms:
 4. Invite the bot to a group or room in the LINE app (search by the bot's **Basic ID** `@xxx` shown in LINE Developers Console → Basic settings)
 5. To get the ID, receive the `join` event or any message event via Webhook — it will contain `source.groupId` (for groups) or `source.roomId` (for rooms)
 
-## Setup
+## Setup (npx — recommended)
+
+No installation needed — just configure your MCP client.
+
+### Claude Code
+
+```bash
+claude mcp add line-mcp-server -t stdio \
+  -e CHANNEL_ACCESS_TOKEN=<your-token> \
+  -- npx -y line-mcp-server
+```
+
+### OpenClaw (mcporter)
+
+```bash
+mcporter config add line-mcp-server \
+  --command npx \
+  --arg -y --arg line-mcp-server \
+  --env CHANNEL_ACCESS_TOKEN=<your-token> \
+  --description "LINE Messaging API tools"
+```
+
+### Other MCP clients
+
+Add the following to your MCP client configuration:
+
+```json
+{
+  "mcpServers": {
+    "line-mcp-server": {
+      "command": "npx",
+      "args": ["-y", "line-mcp-server"],
+      "env": {
+        "CHANNEL_ACCESS_TOKEN": "<your-token>"
+      }
+    }
+  }
+}
+```
+
+## Setup (build from source)
 
 ```bash
 git clone https://github.com/tsen1220/line-mcp-server.git
@@ -108,7 +148,15 @@ npm install
 npm run build   # compiles TypeScript to dist/
 ```
 
-## Register in OpenClaw with mcporter
+### Claude Code
+
+```bash
+claude mcp add line-mcp-server -t stdio \
+  -e CHANNEL_ACCESS_TOKEN=<your-token> \
+  -- node /path/to/line-mcp-server/dist/index.js
+```
+
+### OpenClaw (mcporter)
 
 ```bash
 mcporter config add line-mcp-server \
@@ -118,26 +166,13 @@ mcporter config add line-mcp-server \
   --description "LINE Messaging API tools"
 ```
 
-Verify registration:
+### Verify & call tools (mcporter)
 
 ```bash
 mcporter list line-mcp-server --schema
-```
-
-Call tools directly:
-
-```bash
 mcporter call line-mcp-server.push_text_message to=U... text="Hello"
 mcporter call line-mcp-server.get_user_profile userId=U...
 mcporter call line-mcp-server.get_bot_info
-```
-
-## Register in Claude Code
-
-```bash
-claude mcp add line-mcp-server -t stdio \
-  -e CHANNEL_ACCESS_TOKEN=<your-token> \
-  -- node /path/to/line-mcp-server/dist/index.js
 ```
 
 After registration, Claude can call LINE tools directly:
